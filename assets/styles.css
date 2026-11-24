@@ -1073,7 +1073,7 @@ html { scroll-behavior: smooth; }
 .tier-card .stack i.on { background: var(--ink); }
 
 /* =====================================================================
-   v4 · light fields: curtain ribbons (hero), flowing connectors (hub),
+   v4 · light fields: converging beams (hero), flowing connectors (hub),
    glow horizon + wordmark (closing), reveal timing per the motion spec.
    Canvas fields are drawn by main.js from the colour tokens below, so
    they follow the theme. Reduced motion gets one still frame.
@@ -1098,9 +1098,9 @@ html { scroll-behavior: smooth; }
 /* ---------- canvas fields ---------- */
 .fx-field { display: block; pointer-events: none; opacity: 0; transition: opacity 1200ms var(--ease-reveal); }
 .fx-field.is-on { opacity: 1; }
-.hero > .fx-curtain { position: absolute; z-index: 0; inset: 0 0 auto 0; width: 100%; height: min(100%, 980px);
+.hero > .fx-hero { position: absolute; z-index: 0; inset: 0 0 auto 0; width: 100%; height: min(100%, 980px);
   -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent); mask-image: linear-gradient(180deg, #000 70%, transparent); }
-/* keep the headline column readable over the ribbons */
+/* keep the headline column readable over the beams */
 .hero .wrap > h1, .hero .wrap > .lead { text-shadow: 0 0 24px var(--canvas); }
 
 /* gradient word in the hero headline */
@@ -1174,3 +1174,4 @@ html { scroll-behavior: smooth; }
 }
 .hero .stage::after { content: ""; position: absolute; left: 12%; right: 12%; top: -1px; height: 1px; pointer-events: none;
   background: linear-gradient(90deg, transparent, var(--aqua), transparent); opacity: .7; }
+

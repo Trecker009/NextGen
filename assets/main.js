@@ -521,8 +521,8 @@
     document.addEventListener('visibilitychange', () => run(onScreen && !document.hidden));
   })();
 
-  /* ---------------- light fields: hero curtain + closing horizon ----------------
-     Canvas bars in signal aqua, read from --fx-ray / --fx-ray-hi so they
+  /* ---------------- light fields: hero beams + closing horizon ----------------
+     Canvas light in signal aqua, read from --fx-ray / --fx-ray-hi so they
      follow the theme. Ambient loop on a 7s-ish cycle, ~30fps, only while on
      screen and the tab is visible. Reduced motion draws one still frame. */
   (function fields() {
@@ -535,12 +535,10 @@
       const n = parseInt(f, 16);
       return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
     };
-    const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 
     const fields = cvs.map(canvas => {
       const ctx = canvas.getContext('2d');
-      // hero defaults to converging beams; ?hero=ribbons shows the earlier curtain version
-      const kind = canvas.dataset.fx === 'beams' && params.get('hero') === 'ribbons' ? 'curtain' : canvas.dataset.fx;
+      const kind = canvas.dataset.fx;
       const f = { canvas, ctx, kind, w: 0, h: 0, col: {}, mask: null, on: false };
 
       f.colours = () => {
@@ -554,6 +552,7 @@
         canvas.width = Math.round(f.w * DPR); canvas.height = Math.round(f.h * DPR);
         ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
         if (kind === 'beams') {
+          // mask = the headline area, cut out after drawing so the copy stays calm
           const m = document.createElement('canvas'); m.width = canvas.width; m.height = canvas.height;
           const mc = m.getContext('2d'); mc.setTransform(DPR, 0, 0, DPR, 0, 0);
           const cx = f.w / 2, rx = Math.min(f.w * 0.3, 520), ry = f.h * 0.42;
@@ -563,23 +562,12 @@
           mc.fillStyle = g; mc.fillRect(-ry, -ry, ry * 2, ry * 2); mc.restore();
           f.mask = m;
         }
-        if (kind === 'curtain') {
-          // mask = the dark stage in the middle (cut out after drawing); ribbons gather at the sides and curve in toward the floor
-          const m = document.createElement('canvas'); m.width = canvas.width; m.height = canvas.height;
-          const mc = m.getContext('2d'); mc.setTransform(DPR, 0, 0, DPR, 0, 0);
-          const cx = f.w / 2, rx = Math.min(f.w * 0.36, 620), ry = f.h * 0.78;
-          mc.save(); mc.translate(cx, f.h * 0.34); mc.scale(rx / ry, 1);
-          const g = mc.createRadialGradient(0, 0, 0, 0, 0, ry);
-          g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.62, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-          mc.fillStyle = g; mc.fillRect(-ry, -ry, ry * 2, ry * 2); mc.restore();
-          f.mask = m;
-        }
       };
       f.draw = t => {
         const { w, h, col } = f;
         ctx.clearRect(0, 0, w, h);
         ctx.globalCompositeOperation = col.light ? 'source-over' : 'lighter';
-        if (kind === 'beams') drawBeams(f, t); else if (kind === 'curtain') drawCurtain(f, t); else drawHorizon(f, t);
+        if (kind === 'beams') drawBeams(f, t); else drawHorizon(f, t);
         ctx.globalCompositeOperation = 'source-over';
       };
       return f;
@@ -658,37 +646,6 @@
       }
       ctx.globalAlpha = 1;
       // keep the headline area calm
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.drawImage(f.mask, 0, 0, w, h);
-    }
-
-    function drawCurtain(f, t) {
-      const { ctx, w, h, col } = f;
-      const step = w < 768 ? 9 : 7, bw = step * 0.62;
-      const vg = ctx.createLinearGradient(0, 0, 0, h);
-      vg.addColorStop(0, hexA(col.hi, 0.75)); vg.addColorStop(0.35, hexA(col.ray, 0.22));
-      vg.addColorStop(0.72, hexA(col.ray, 0.42)); vg.addColorStop(1, hexA(col.hi, 0.95));
-      ctx.fillStyle = vg;
-      const cx = w / 2;
-      for (let x = step / 2; x < w; x += step) {
-        const u = Math.abs(x - cx) / cx;                       // 0 centre → 1 edge
-        const reach = smooth(w < 768 ? 0.5 : 0.28, 0.95, u);
-        if (reach <= 0.01) continue;
-        const s = Math.sign(x - cx) || 1;
-        // folds drift slowly outward, like light catching a pleated curtain
-        const fold = 0.5 + 0.5 * Math.sin(x * 0.052 - s * t * 0.55 + Math.sin(x * 0.009 + t * 0.21) * 2.4);
-        const crest = Math.pow(fold, 3);
-        const a = clamp((0.12 + 0.88 * crest) * reach * col.k);
-        ctx.globalAlpha = a * 0.22;                              // soft bloom around each ribbon
-        ctx.fillRect(x - step * 1.1, 0, step * 2.2, h);
-        ctx.globalAlpha = a;
-        ctx.fillRect(x - bw / 2, 0, bw, h);
-      }
-      ctx.globalAlpha = 1;
-      // floor glow where the ribbons meet the stage
-      const fg = ctx.createRadialGradient(cx, h * 1.02, 0, cx, h * 1.02, w * 0.55);
-      fg.addColorStop(0, hexA(col.ray, 0.18 * col.k)); fg.addColorStop(1, hexA(col.ray, 0));
-      ctx.fillStyle = fg; ctx.fillRect(0, 0, w, h);
       ctx.globalCompositeOperation = 'destination-out';
       ctx.drawImage(f.mask, 0, 0, w, h);
     }
