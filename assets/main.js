@@ -17,6 +17,31 @@
     set(k, v) { try { localStorage.setItem(k, v); } catch {} },
   };
 
+  /* ---------------- GSAP: scroll scenes and loops share one clock ----------------
+     ScrollTrigger only reads the scroll (no pinning, no scroll-jacking); scrub
+     gives each scene a short catch-up so wheel clicks don't show as jumps.
+     Without GSAP, or with reduced motion, the scenes show their final frame. */
+  const G = window.gsap, ST = window.ScrollTrigger, FLIP = window.Flip;
+  const still = reduced || !G || !ST;
+  if (G && ST) {
+    G.registerPlugin(ST); if (FLIP) G.registerPlugin(FLIP);
+    ST.config({ ignoreMobileResize: true }); // a collapsing address bar is not a resize
+    document.documentElement.classList.add('has-gsap');
+  }
+  const DESK = '(min-width: 1024px)', SMALL = '(max-width: 1023px)';
+  // run fn(progress) as the scroll moves between start and end
+  function scrub(trigger, start, end, lag, fn) {
+    const s = { p: 0 };
+    return G.to(s, { p: 1, ease: 'none', onUpdate: () => fn(s.p), scrollTrigger: { trigger, start, end, scrub: lag, invalidateOnRefresh: true, onRefresh: self => { if (!self.isActive) fn(self.progress); } } });
+  }
+  // a loop on GSAP's ticker that only runs while asked to
+  function ticker(fn) {
+    let on = false;
+    const step = time => fn(time * 1000);
+    return want => { if (want === on) return; on = want; if (G) G.ticker[want ? 'add' : 'remove'](step); };
+  }
+  if (!still) addEventListener('load', () => ST.refresh());
+
   /* ---------------- tool logos: files in assets/logos ---------------- */
   const PNG_LOGOS = ['clay', 'cognism', 'instantly', 'aircall', 'smartlead', 'orum'];
   const logoSrc = n => `assets/logos/${n}.${PNG_LOGOS.includes(n) ? 'png' : 'svg'}`;
@@ -296,31 +321,13 @@
     }
 
     const track = $('[data-story-scroll]');
-    const desk = matchMedia('(min-width: 1024px)');
-    let raf = 0, t = 0, target = 0, last = 0, seen = false, rest = 0, timed = false;
+    const clock = { scroll: 0, timed: 0 };   // story seconds from the scroll, and from replay
+    let t = 0, last = 0, rest = 0, replaying = null;
 
-    // where the scroll says the story should be, in story seconds
-    function readScroll() {
-      const r = track.getBoundingClientRect(), vh = innerHeight;
-      let p;
-      if (desk.matches) {
-        const pin = parseFloat(getComputedStyle(root).top) || 0, run = r.height - root.offsetHeight;
-        p = (pin + vh * 0.22 - r.top) / (run + vh * 0.22 - vh * 0.16); // starts as it settles, holds the last frame a moment
-      } else {
-        const sr = stage.getBoundingClientRect();
-        p = (vh * 0.74 - sr.top) / (sr.height * 0.86);
-      }
-      target = END * clamp(p);
-    }
-    function tick(now) {
-      raf = 0;
+    function frame(now) {
       const dt = Math.min(50, now - last); last = now;
       const was = t;
-      if (timed) { t = Math.min(END, t + dt / 1000 * SPEED); if (t >= END) timed = false; }
-      else {
-        t += (target - t) * (1 - Math.exp(-dt / 90)); // follow the scroll, smoothing out wheel steps
-        if (Math.abs(target - t) < 0.004) t = target;
-      }
+      t = replaying ? clock.timed : clock.scroll;
       // redraw while it moves, and while the call is talking
       if (t !== was || (t > 1.25 && t < END)) render(t, now);
       replay.classList.toggle('on', t >= END);
@@ -330,30 +337,40 @@
         const c = (rest % 7000) / 1000;
         comet(0, seg(c, 4.6, 5.5), 0.8); comet(1, seg(c, 5.6, 6.5), 0.8);
       } else rest = 0;
-      run();
     }
-    function run() { if (!raf && seen && !document.hidden) raf = requestAnimationFrame(tick); }
-    function play() { timed = true; t = 0; last = performance.now(); render(0); run(); }
-    const refresh = () => { root.style.setProperty('--stage-h', root.offsetHeight + 'px'); layout(); width = bar.clientWidth; if (!timed && !pin && !reduced) readScroll(); render(t); };
+    const loop = ticker(frame);
+    let seen = false;
+    const run = () => { last = performance.now(); loop(seen && !document.hidden); };
+    const stopReplay = () => { if (replaying) { replaying.kill(); replaying = null; } };
+    function play() {
+      stopReplay(); clock.timed = 0;
+      replaying = G.to(clock, { timed: END, duration: END / SPEED, ease: 'none', onComplete: () => { if (clock.scroll >= END) replaying = null; } });
+    }
+    const refresh = () => { root.style.setProperty('--stage-h', root.offsetHeight + 'px'); layout(); width = bar.clientWidth; render(t); };
     const pin = params.get('story');
-    replay.addEventListener('click', play);
+    replay.addEventListener('click', () => { if (G) play(); });
     addEventListener('resize', refresh);
-    if (reduced || pin) {
+    if (still || pin) {
       track.classList.add('is-still');
       t = pin && pin !== 'end' ? clamp(parseFloat(pin) || 0, 0, END) : END;
-      stage.classList.add('is-live'); replay.classList.toggle('on', t >= END && !reduced);
+      stage.classList.add('is-live'); replay.classList.toggle('on', t >= END && !still);
       (document.fonts?.ready || Promise.resolve()).then(refresh);
       return;
     }
-    (document.fonts?.ready || Promise.resolve()).then(refresh);
-    const onScroll = () => { timed = false; readScroll(); };
-    new IntersectionObserver(([e]) => {
-      seen = e.isIntersecting; last = performance.now();
-      if (!seen) { removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); raf = 0; return; }
-      addEventListener('scroll', onScroll, { passive: true });
-      readScroll(); stage.classList.add('is-live'); run();
-    }).observe(stage);
-    document.addEventListener('visibilitychange', () => { last = performance.now(); if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else run(); });
+    const set01 = p => { clock.scroll = END * p; };
+    refresh();
+    const mm = G.matchMedia();
+    // desktop: starts as the stage settles, and holds the last frame for a moment before letting go
+    mm.add(DESK, () => {
+      const pin = () => parseFloat(getComputedStyle(root).top) || 0;
+      scrub(track, () => `top ${pin() + innerHeight * 0.22}px`, () => `bottom ${pin() + root.offsetHeight + innerHeight * 0.16}px`, 0.6, set01);
+    });
+    // smaller screens: as the stage passes through
+    mm.add(SMALL, () => { scrub(stage, 'top 74%', () => `bottom ${innerHeight * 0.74 + stage.offsetHeight * 0.14}px`, 0.35, set01); });
+    addEventListener('scroll', stopReplay, { passive: true });
+    new IntersectionObserver(([e]) => { seen = e.isIntersecting; if (seen) stage.classList.add('is-live'); run(); }).observe(stage);
+    document.addEventListener('visibilitychange', run);
+    (document.fonts?.ready || Promise.resolve()).then(() => { refresh(); ST.refresh(); });
   })();
 
   /* ---------------- booking forms: check the email, then open the calendar ---------------- */
@@ -388,43 +405,33 @@
   /* ---------------- problem dial (desktop scroll) ---------------- */
   (function dial() {
     const wrap = $('[data-dial]');
-    if (!wrap || reduced) return;
+    if (!wrap || still) return;
     const rows = $$('.pa-row', wrap);
     const nOut = $('[data-dial-n]', wrap), dot = $('[data-dial-dot]', wrap);
-    const mq = matchMedia('(min-width: 1024px)');
     const smooth = x => x * x * (3 - 2 * x);
-    let raf = 0;
-    function frame() {
-      raf = 0;
-      if (!mq.matches) return; // phones fire resize when the address bar collapses; the dial is desktop only
-      const r = wrap.getBoundingClientRect();
-      const span = wrap.offsetHeight - innerHeight * 0.72;
-      apply(clamp((innerHeight * 0.16 - r.top) / span));
-    }
-    window.__ngDial = p => { if (mq.matches) apply(clamp(p)); }; // design-export hook
     function apply(p) {
       const raw = p * (rows.length - 1), base = Math.floor(raw), frac = raw - base;
       const eased = Math.min(rows.length - 1, base + smooth(clamp((frac - 0.3) / 0.4)));
       const active = Math.round(eased);
       rows.forEach((row, i) => {
         const o = i - eased, a = Math.abs(o);
-        row.style.transform = `translateY(calc(-50% + ${o * 170}px)) rotateX(${o * -32}deg) scale(${1 - Math.min(a, 1.5) * 0.06})`;
-        row.style.opacity = String(Math.max(0, 1 - a * 0.7));
+        row.style.transform = `translateY(calc(-50% + ${(o * 170).toFixed(2)}px)) rotateX(${(o * -32).toFixed(2)}deg) scale(${(1 - Math.min(a, 1.5) * 0.06).toFixed(4)})`;
+        row.style.opacity = Math.max(0, 1 - a * 0.7).toFixed(3);
         row.classList.toggle('is-on', i === active);
       });
-      nOut.textContent = String(active + 1).padStart(2, '0');
-      dot.style.setProperty('--dy', (eased / (rows.length - 1)) * 133 + 'px');
+      const n = String(active + 1).padStart(2, '0');
+      if (nOut.textContent !== n) nOut.textContent = n;
+      dot.style.transform = `translateY(${((eased / (rows.length - 1)) * 133).toFixed(1)}px)`;
     }
-    const req = () => { if (!raf) raf = requestAnimationFrame(frame); };
-    function setMode() {
-      const on = mq.matches;
-      wrap.classList.toggle('dial-on', on);
-      if (on) { rows.forEach(r => r.classList.add('in')); addEventListener('scroll', req, { passive: true }); frame(); }
-      else { removeEventListener('scroll', req); cancelAnimationFrame(raf); raf = 0; rows.forEach(r => { r.style.transform = ''; r.style.opacity = ''; r.classList.remove('is-on'); }); }
-    }
-    mq.addEventListener('change', setMode);
-    addEventListener('resize', req);
-    setMode();
+    window.__ngDial = p => { if (matchMedia(DESK).matches) apply(clamp(p)); }; // design-export hook
+    // phones never enter here, so nothing can move the stacked rows
+    G.matchMedia().add(DESK, () => {
+      wrap.classList.add('dial-on');
+      rows.forEach(r => r.classList.add('in'));
+      apply(0);
+      scrub(wrap, 'top 16%', 'bottom 88%', 0.5, apply);
+      return () => { wrap.classList.remove('dial-on'); rows.forEach(r => { r.style.transform = ''; r.style.opacity = ''; r.classList.remove('is-on'); }); dot.style.transform = ''; };
+    });
   })();
 
   /* =================================================================
@@ -560,43 +567,34 @@
 
     window.__ngFunnel = p => { measure(); render(clamp(p)); }; // design-export hook: render any frame
     const pinnedP = params.has('how') ? clamp(parseFloat(params.get('how')) || 0) : null;
-    const desk = matchMedia('(min-width: 1024px)');
     measure();
     section.classList.add('fn-live');
-    if (reduced || pinnedP !== null) {
-      const still = () => { measure(); render(pinnedP ?? 1); };
-      still(); addEventListener('resize', still); (document.fonts?.ready || Promise.resolve()).then(still);
+    if (still || pinnedP !== null) {
+      const draw = () => { measure(); render(pinnedP ?? 1); };
+      draw(); addEventListener('resize', draw); (document.fonts?.ready || Promise.resolve()).then(draw);
       return;
     }
 
-    let raf = 0, playRaf = 0;
-    function scrubFrame() {
-      raf = 0;
-      if (desk.matches) { const r = root.getBoundingClientRect(); render(clamp(-r.top / (root.offsetHeight - innerHeight))); }
-      else { const r = stage.getBoundingClientRect(); render(clamp((innerHeight * 0.72 - r.top) / r.height)); }
-    }
-    const req = () => { cancelAnimationFrame(playRaf); if (!raf) raf = requestAnimationFrame(scrubFrame); };
-    function playTimed() {
-      cancelAnimationFrame(playRaf);
+    let replaying = null, p = 0;
+    const show = v => { p = v; if (!replaying) render(v); };
+    const stopReplay = () => { if (replaying) { replaying.kill(); replaying = null; render(p); } };
+    replayBtn.addEventListener('click', () => {
+      if (replaying) replaying.kill();
       stage.scrollIntoView({ block: 'nearest', behavior: 'auto' });
-      const t0 = performance.now(), dur = 7000;
-      const step = now => { const k = clamp((now - t0) / dur); render(k); if (k < 1) playRaf = requestAnimationFrame(step); };
-      playRaf = requestAnimationFrame(step);
-    }
-    replayBtn.addEventListener('click', playTimed);
-    // only listen to scroll while the scene is near the viewport
-    let near = false;
-    new IntersectionObserver(([e]) => {
-      if (e.isIntersecting === near) return;
-      near = e.isIntersecting;
-      if (near) addEventListener('scroll', req, { passive: true }); else removeEventListener('scroll', req);
-      scrubFrame();
-    }, { rootMargin: '20% 0px' }).observe(root);
-    const layout = () => { root.classList.toggle('is-scrub', desk.matches); measure(); scrubFrame(); };
-    desk.addEventListener('change', layout);
-    addEventListener('resize', () => { measure(); if (!raf) raf = requestAnimationFrame(scrubFrame); });
-    (document.fonts?.ready || Promise.resolve()).then(layout);
-    layout();
+      const s = { v: 0 };
+      // start listening for a scroll only once the jump above has settled
+      replaying = G.to(s, { v: 1, duration: 7, ease: 'none', onUpdate: () => render(s.v), onComplete: () => { replaying = null; } });
+      G.delayedCall(0.25, () => addEventListener('scroll', stopReplay, { passive: true, once: true }));
+    });
+    const mm = G.matchMedia();
+    mm.add(DESK, () => {
+      root.classList.add('is-scrub'); measure();
+      scrub(root, 'top top', 'bottom bottom', 0.5, show);
+      return () => root.classList.remove('is-scrub');
+    });
+    mm.add(SMALL, () => { measure(); scrub(stage, 'top 72%', 'bottom 72%', 0.35, show); });
+    ST.addEventListener('refresh', () => { measure(); render(p); });
+    (document.fonts?.ready || Promise.resolve()).then(() => ST.refresh());
   })();
 
   /* ---------------- hub: your tools in, pipeline out ----------------
@@ -609,10 +607,10 @@
     const ins = [['HubSpot', 'crm', 'mute', 'hubspot'], ['Salesforce', 'crm', 'mute', 'salesforce'], ['LinkedIn', 'intent', 'sig', 'linkedin'], ['Clay', 'enrichment', 'sig', 'clay']];
     const outs = [['Call queue', 'sdr floor', 'live', '#i-headset'], ['Sequences', 'email · linkedin', 'mute', '#i-mail'], ['Your calendar', 'meetings', 'ok', '#i-cal'], ['Slack', '#wins', 'ok', 'slack']]; // '#' = line icon, else a logo file
     const TAIL = 5;
-    let packets = [], coreHit = null, raf = 0, visible = false;
+    let packets = [], coreHit = null;
     const stop = (o, a) => `<stop offset="${o}" stop-color="var(--aqua)" stop-opacity="${a}"/>`;
     const lin = (id, x1, y1, x2, y2, a, b) => `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stop(0, a)}${stop(1, b)}</linearGradient>`;
-    const edge = `<linearGradient id="hubEdge" x1="0" y1="0" x2="1" y2="1">${stop(0, 0.9)}${stop(0.5, 0.15)}${stop(1, 0.9)}</linearGradient>`;
+    const edge = `<radialGradient id="hubHalo">${stop(0, 0.9)}${stop(0.45, 0.5)}${stop(1, 0)}</radialGradient>` + `<linearGradient id="hubEdge" x1="0" y1="0" x2="1" y2="1">${stop(0, 0.9)}${stop(0.5, 0.15)}${stop(1, 0.9)}</linearGradient>`;
 
     function build() {
       const v = matchMedia('(max-width: 767px)').matches;
@@ -626,7 +624,7 @@
           : `<rect class="tile" x="${x + 11}" y="${y + (h - 40) / 2}" width="40" height="40" rx="10"/>${mark(x + 19, y + (h - 24) / 2, 24, ic)}<text x="${x + 64}" y="${y + h / 2 - 3}" font-family="Geist" font-weight="500">${t}</text><text class="sub" x="${x + 64}" y="${y + h / 2 + 15}" font-family="Geist Mono" font-weight="500">${s}</text>`)
         + `<rect class="hit ${kind}" x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/></g>`;
       const core = (x, y, w, h) =>
-        `<g class="core" style="--d:760ms"><rect class="core-halo" x="${x + 16}" y="${y + 16}" width="${w - 32}" height="${h - 32}" rx="12"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12"/><rect class="core-glow" x="${x}" y="${y}" width="${w}" height="${h}" rx="12" stroke="url(#hubEdge)"/><rect class="hit" x="${x}" y="${y}" width="${w}" height="${h}" rx="12"/><text x="${x + w / 2}" y="${y + h / 2 - 3}" text-anchor="middle" font-family="Geist" font-weight="600">NextGen engine</text><text class="sub" x="${x + w / 2}" y="${y + h / 2 + 15}" text-anchor="middle" font-family="Geist Mono" font-weight="500">signals → sdrs → crm</text></g>`;
+        `<g class="core" style="--d:760ms"><ellipse class="core-halo" cx="${x + w / 2}" cy="${y + h / 2}" rx="${w * 0.72}" ry="${h * 0.95}" fill="url(#hubHalo)"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12"/><rect class="core-glow" x="${x}" y="${y}" width="${w}" height="${h}" rx="12" stroke="url(#hubEdge)"/><rect class="hit" x="${x}" y="${y}" width="${w}" height="${h}" rx="12"/><text x="${x + w / 2}" y="${y + h / 2 - 3}" text-anchor="middle" font-family="Geist" font-weight="600">NextGen engine</text><text class="sub" x="${x + w / 2}" y="${y + h / 2 + 15}" text-anchor="middle" font-family="Geist Mono" font-weight="500">signals → sdrs → crm</text></g>`;
       let W, H, wires = [], nodes = '', grads;
       if (!v) {
         W = 1120; H = 352;
@@ -656,9 +654,10 @@
       coreHit = $('.core .hit', svg);
       packets = wires.map((w, i) => {
         const path = $('#hw' + i, svg);
-        return { path, side: w.side, hit: hits[i], len: path.getTotalLength(), dots: $$(`circle[data-w="${i}"]`, svg), off: (i % 4) * 0.25 + (i >= 4 ? 0.12 : 0), speed: 2600 + (i % 3) * 400 };
+        const len = path.getTotalLength(), pts = Array.from({ length: 161 }, (_, k) => path.getPointAtLength(len * k / 160));
+        return { path, side: w.side, hit: hits[i], len, pts, dots: $$(`circle[data-w="${i}"]`, svg), off: (i % 4) * 0.25 + (i >= 4 ? 0.12 : 0), speed: 2600 + (i % 3) * 400 };
       });
-      if (reduced) packets.forEach(p => { const pt = p.path.getPointAtLength(p.len * 0.6), c = p.dots[0]; c.setAttribute('cx', pt.x); c.setAttribute('cy', pt.y); c.setAttribute('opacity', 1); });
+      if (still) packets.forEach(p => { const pt = p.path.getPointAtLength(p.len * 0.6), c = p.dots[0]; c.setAttribute('cx', pt.x); c.setAttribute('cy', pt.y); c.setAttribute('opacity', 1); });
     }
     function loop(now) {
       // a node flashes as its packet leaves or lands; the engine flashes on each arrival
@@ -671,18 +670,18 @@
       coreHit.style.opacity = (coreOn * 0.9).toFixed(2);
       packets.forEach(p => p.dots.forEach((c, k) => {
         const kk = (((now - k * 34) / p.speed + p.off) % 1 + 1) % 1;
-        const pt = p.path.getPointAtLength(easeInOut(kk) * p.len);
+        const u = easeInOut(kk) * 160, n = Math.min(159, u | 0), m = u - n, A = p.pts[n], B = p.pts[n + 1];
+        const pt = { x: A.x + (B.x - A.x) * m, y: A.y + (B.y - A.y) * m };
         const fade = kk < 0.08 ? kk / 0.08 : kk > 0.92 ? (1 - kk) / 0.08 : 1;
         c.setAttribute('cx', pt.x.toFixed(1)); c.setAttribute('cy', pt.y.toFixed(1));
         c.setAttribute('opacity', (fade * (1 - k / TAIL) * (k ? 0.7 : 1)).toFixed(2));
       }));
-      if (visible) raf = requestAnimationFrame(loop);
     }
     build();
     matchMedia('(max-width: 767px)').addEventListener('change', build);
-    if (reduced) { host.classList.add('in'); return; }
+    if (still) { host.classList.add('in'); return; }
     new IntersectionObserver(([e], o) => { if (e.isIntersecting) { host.classList.add('in'); o.disconnect(); } }, { threshold: 0.3 }).observe(host);
-    const run = on => { visible = on; cancelAnimationFrame(raf); if (visible) raf = requestAnimationFrame(loop); };
+    const run = ticker(loop);
     let onScreen = false;
     new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; run(onScreen && !document.hidden); }).observe(host);
     document.addEventListener('visibilitychange', () => run(onScreen && !document.hidden));
@@ -780,7 +779,7 @@
       // layered diamonds around the vanishing point, drifting outward
       const D = 6;
       for (let i = 0; i < D; i++) {
-        const p = reduced ? (i + 0.5) / D : ((i + t * 0.07) % D) / D;  // 0 → 1 as it grows
+        const p = still ? (i + 0.5) / D : ((i + t * 0.07) % D) / D;  // 0 → 1 as it grows
         const r = (0.08 + p * 0.95) * Math.max(w * 0.5, h * 0.9);
         const a = Math.sin(p * Math.PI) * 0.16 * k;
         ctx.save(); ctx.translate(vx, vy); ctx.scale(1.25, 0.72); ctx.rotate(Math.PI / 4);
@@ -804,7 +803,7 @@
           const ix = ex + (vx - ex) * stop, iy = ey + (vy - ey) * stop;
           const weight = Math.exp(-Math.pow((ey - vy) / (h * 0.42), 2));
           const hero = rand(j, 3) > 0.78;                        // a few bright, thick beams
-          const intro = reduced ? 1 : easeOut(clamp((t - 0.15 - rand(j, 4) * 0.6) / 1.1));
+          const intro = still ? 1 : easeOut(clamp((t - 0.15 - rand(j, 4) * 0.6) / 1.1));
           if (intro <= 0) continue;
           const tx = ex + (ix - ex) * intro, ty = ey + (iy - ey) * intro;
           const base = (0.12 + 0.6 * weight) * (hero ? 1.5 : 1) * k;
@@ -817,7 +816,7 @@
           // a pulse of light travelling inward along the beam
           if (intro >= 1 && weight > 0.15) {
             const sp = 0.16 + rand(j, 5) * 0.14;
-            const q = reduced ? 0.45 : (t * sp + rand(j, 6)) % 1;
+            const q = still ? 0.45 : (t * sp + rand(j, 6)) % 1;
             const q0 = Math.max(0, q - 0.14);
             const ax = ex + (ix - ex) * q0, ay = ey + (iy - ey) * q0, bx = ex + (ix - ex) * q, by = ey + (iy - ey) * q;
             const pg = ctx.createLinearGradient(ax, ay, bx, by);
@@ -858,7 +857,7 @@
         const reach = 0.46 + rand(j, 2) * 0.34;
         const ix = ex + (vx - ex) * reach, iy = ey + (vy - ey) * reach;
         const hot = rand(j, 3) > 0.8, weight = 0.42 + 0.58 * Math.abs(dx);
-        const intro = reduced ? 1 : easeOut(clamp((t - rand(j, 4) * 0.6) / 1.1));
+        const intro = still ? 1 : easeOut(clamp((t - rand(j, 4) * 0.6) / 1.1));
         if (intro <= 0) continue;
         const base = clamp((hot ? 0.85 : 0.4) * weight * k);
         const g = ctx.createLinearGradient(ex, ey, ix, iy);
@@ -869,7 +868,7 @@
         ctx.lineWidth = hot ? 2.2 : 1;
         ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(tx, ty); ctx.stroke();
         if (intro < 1) continue;
-        const q = reduced ? 0.45 : (t * (0.12 + rand(j, 5) * 0.12) + rand(j, 6)) % 1, q0 = Math.max(0, q - 0.16);
+        const q = still ? 0.45 : (t * (0.12 + rand(j, 5) * 0.12) + rand(j, 6)) % 1, q0 = Math.max(0, q - 0.16);
         const ax = ex + (ix - ex) * q0, ay = ey + (iy - ey) * q0, bx = ex + (ix - ex) * q, by = ey + (iy - ey) * q;
         const pg = ctx.createLinearGradient(ax, ay, bx, by), pa = clamp(Math.sin(q * Math.PI) * weight * k);
         pg.addColorStop(0, hexA(col.hi, 0)); pg.addColorStop(1, hexA(col.hi, pa));
@@ -887,31 +886,30 @@
       ctx.fillStyle = rg; ctx.fillRect(-rr, -rr, rr * 2, rr * 2); ctx.restore();
     }
 
-    fields.forEach(f => { f.colours(); f.size(); f.draw(reduced ? 2 : 0); });
+    fields.forEach(f => { f.colours(); f.size(); f.draw(still ? 2 : 0); });
     requestAnimationFrame(() => fields.forEach(f => f.canvas.classList.add('is-on')));
 
     let ro;
-    const redrawAll = () => fields.forEach(f => { f.colours(); f.size(); f.draw(f.t ?? (reduced ? 2 : 0)); });
+    const redrawAll = () => fields.forEach(f => { f.colours(); f.size(); f.draw(f.t ?? (still ? 2 : 0)); });
     if ('ResizeObserver' in window) { ro = new ResizeObserver(redrawAll); fields.forEach(f => ro.observe(f.canvas)); } // the observer also re-aims the closing beams when the form moves
-    new MutationObserver(() => fields.forEach(f => { f.colours(); f.draw(f.t ?? (reduced ? 2 : 0)); })).observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode', 'data-theme'] });
+    new MutationObserver(() => fields.forEach(f => { f.colours(); f.draw(f.t ?? (still ? 2 : 0)); })).observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode', 'data-theme'] });
     (document.fonts?.ready || Promise.resolve()).then(redrawAll);
-    if (reduced) return;
+    if (still) return;
 
-    let raf = 0, last = 0;
+    const gap = matchMedia('(pointer: coarse)').matches ? 30 : 11; // 30fps on touch to save battery, every frame on desktop (every other above 90Hz)
+    let last = 0;
     const t0 = performance.now();
-    function tick(now) {
-      raf = 0;
-      if (now - last >= 33) { // ~30fps is plenty for a slow ambient field
-        last = now;
-        const t = (now - t0) / 1000 * (TAU / 7) * 1.1; // one full drift every ~7s
-        fields.forEach(f => { if (f.on) { f.t0 ??= t; f.t = t - f.t0; f.draw(f.t); } });
-      }
-      schedule();
-    }
-    function schedule() { if (!raf && !document.hidden && fields.some(f => f.on)) raf = requestAnimationFrame(tick); }
+    const tick = now => {
+      if (now - last < gap) return;
+      last = now;
+      const t = (performance.now() - t0) / 1000 * (TAU / 7) * 1.1; // one full drift every ~7s
+      fields.forEach(f => { if (f.on) { f.t0 ??= t; f.t = t - f.t0; f.draw(f.t); } });
+    };
+    const loop = ticker(tick);
+    const schedule = () => loop(!document.hidden && fields.some(f => f.on));
     const io = new IntersectionObserver(es => { es.forEach(e => { const f = fields.find(x => x.canvas === e.target); if (f) f.on = e.isIntersecting; }); schedule(); });
     fields.forEach(f => io.observe(f.canvas));
-    document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else schedule(); });
+    document.addEventListener('visibilitychange', schedule);
   })();
 
   /* ---------------- staggered groups: children reveal 60ms apart (max 8) ---------------- */
@@ -1026,7 +1024,13 @@
       cards.forEach(c => { const on = (cat === 'all' || c.dataset.c === cat) && (!q || c.textContent.toLowerCase().includes(q)); c.hidden = !on; if (on) n++; });
       out.textContent = `${n} ${n === 1 ? 'tool' : 'tools'}`;
     }
-    chips.forEach(b => b.addEventListener('click', () => { cat = b.dataset.dirCat; chips.forEach(o => o.setAttribute('aria-pressed', String(o === b))); apply(); }));
+    chips.forEach(b => b.addEventListener('click', () => {
+      cat = b.dataset.dirCat; chips.forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+      const near = !still && FLIP ? cards.filter(c => c.offsetParent && c.getBoundingClientRect().top < innerHeight * 1.5) : [];
+      const state = near.length ? FLIP.getState(cards) : null;
+      apply();
+      if (state) FLIP.from(state, { duration: 0.28, ease: 'power3.out', simple: true, onEnter: els => G.fromTo(els, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.24, ease: 'power3.out', clearProps: 'opacity,transform' }) });
+    }));
     input.addEventListener('input', apply);
     document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); input.focus(); input.select(); } });
   })();
@@ -1061,11 +1065,8 @@
   /* ---------------- reading progress under the header ---------------- */
   (function progress() {
     const bar = $('.read-progress');
-    if (!bar) return;
-    let raf = 0;
-    const set = () => { raf = 0; const max = document.documentElement.scrollHeight - innerHeight; bar.style.setProperty('--rp', max > 0 ? (scrollY / max).toFixed(4) : 0); };
-    addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(set); }, { passive: true });
-    set();
+    if (!bar || !G || !ST) return;
+    G.fromTo(bar, { scaleX: 0 }, { scaleX: 1, ease: 'none', transformOrigin: 'left', scrollTrigger: { start: 0, end: 'max', scrub: reduced ? true : 0.25 } });
   })();
 
   /* ---------------- client results: logo tabs rotate the case studies ---------------- */
@@ -1136,7 +1137,15 @@
       row.style.setProperty('--mq', (64 + i * 10) + 's');
     });
     const mq = $('[data-marquee]');
-    if (mq && !reduced) new IntersectionObserver(([e]) => mq.classList.toggle('is-running', e.isIntersecting)).observe(mq);
+    if (mq && !reduced) {
+      new IntersectionObserver(([e]) => mq.classList.toggle('is-running', e.isIntersecting)).observe(mq);
+      if (G && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        const speed = { v: 1 };
+        const to = v => G.to(speed, { v, duration: 0.6, ease: 'power3.out', overwrite: true, onUpdate: () => $$('.marquee-row', mq).forEach(r => r.getAnimations().forEach(a => (a.playbackRate = speed.v))) });
+        mq.addEventListener('pointerenter', () => to(0));
+        mq.addEventListener('pointerleave', () => to(1));
+      }
+    }
   })();
 
   /* ---------------- ambient CSS loops run only while their block is on screen ---------------- */

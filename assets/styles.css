@@ -531,18 +531,19 @@ section { position: relative; }
 .pa-row .ans p { color: var(--ink-muted); max-width: 56ch; }
 .dial-rail { display: none; }
 @media (min-width: 1024px) {
-  .pa-scroll.dial-on { position: relative; height: 240vh; }
+  .pa-scroll.dial-on { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; height: 240vh; }
+  .dial-on > .pa, .dial-on > .dial-rail { grid-area: 1 / 1; } /* one shared sticky frame, so the rail leaves with the rows */
   .dial-on .pa { position: sticky; top: calc(var(--header-h) + 8vh); height: 72vh; border-top: 0; perspective: 1400px; }
   .dial-on .pa-row { position: absolute; left: 56px; right: 0; top: 50%; border-bottom: 0; padding: 0; will-change: transform, opacity; transform-origin: 50% 50% -200px; }
   .dial-on .pa-row.rv { transition: none; }
   .dial-on .pa-row .ans p { transition: opacity var(--dur-reveal); }
   .dial-on .pa-row:not(.is-on) .ans p { opacity: 0; }
   .dial-on .pa-row.is-on .to { color: var(--ink); border-color: var(--ink); }
-  .dial-on > .dial-rail { display: block; position: sticky; top: calc(var(--header-h) + 44vh - 70px); height: 140px; margin-bottom: -140px; z-index: 2; pointer-events: none; }
-  .dial-rail .count { position: absolute; left: 0; top: -32px; font-family: var(--mono); font-size: 13px; color: var(--ink-muted); white-space: nowrap; }
+  .dial-on > .dial-rail { display: block; position: sticky; top: calc(var(--header-h) + 8vh); height: 72vh; z-index: 2; pointer-events: none; }
+  .dial-rail .count { position: absolute; left: 0; top: calc(36vh - 102px); font-family: var(--mono); font-size: 13px; color: var(--ink-muted); white-space: nowrap; }
   .dial-rail .count b { color: var(--ink); font-weight: 500; }
-  .dial-rail .track { position: absolute; left: 4px; top: 0; width: 1px; height: 140px; background: var(--line); }
-  .dial-rail .track i { position: absolute; left: -3px; top: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); transform: translateY(var(--dy, 0px)); }
+  .dial-rail .track { position: absolute; left: 4px; top: calc(36vh - 70px); width: 1px; height: 140px; background: var(--line); }
+  .dial-rail .track i { position: absolute; left: -3px; top: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
 }
 .pa-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gutter); margin-top: var(--space-7); }
 .metric-tile { padding: var(--space-5); border-radius: var(--radius-md); background: var(--surface); border: 1px solid var(--line); display: grid; gap: var(--space-2); }
@@ -899,7 +900,7 @@ html { scroll-behavior: smooth; }
 .footer { position: relative; }
 
 /* ---------- header: reading progress ---------- */
-.read-progress { position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%; background: var(--ink-muted); transform-origin: left; transform: scaleX(var(--rp, 0)); pointer-events: none; }
+.read-progress { position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%; background: var(--ink-muted); transform-origin: left; transform: scaleX(0); pointer-events: none; }
 
 /* ---------- headings that reveal word by word ---------- */
 .split .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .1em; margin-bottom: -.1em; }
@@ -968,7 +969,6 @@ html { scroll-behavior: smooth; }
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .marquee-row { display: flex; gap: var(--space-4); width: max-content; animation: marquee var(--mq, 70s) linear infinite; }
 .marquee-row[data-dir="-1"] { animation-direction: reverse; }
-.marquee:hover .marquee-row, .marquee:focus-within .marquee-row { animation-play-state: paused; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .qcard { flex: none; width: 380px; margin: 0; display: grid; gap: var(--space-5); align-content: space-between; padding: var(--space-5); border-radius: var(--radius-md); background: var(--surface); border: 1px solid var(--line); transition: border-color var(--dur-hover), transform var(--dur-reveal) var(--ease-out); }
 .qcard:hover { border-color: var(--line-strong); transform: translateY(-2px); }
@@ -990,7 +990,7 @@ html { scroll-behavior: smooth; }
 .marquee::after { right: 0; background: linear-gradient(270deg, var(--canvas), transparent); }
 .marquee-row { animation-play-state: paused; will-change: transform; }
 .marquee.is-running .marquee-row { animation-play-state: running; }
-.marquee.is-running:hover .marquee-row, .marquee.is-running:focus-within .marquee-row { animation-play-state: paused; }
+html:not(.has-gsap) .marquee.is-running:hover .marquee-row, .marquee.is-running:focus-within .marquee-row { animation-play-state: paused; }
 
 /* tone-deep grid without a mask layer: fades come from gradient layers on top */
 .tone-deep::before { -webkit-mask-image: none; mask-image: none;
@@ -1055,8 +1055,8 @@ html { scroll-behavior: smooth; }
 .hub-svg .trail.ok { fill: var(--aqua); }
 .hub-svg .trail.mute { fill: var(--ink-muted); }
 .hub-svg .core rect.core-glow { fill: none; stroke: url(#hubEdge); stroke-width: 1.5; }
-.hub-svg .core rect.core-halo { stroke: none; fill: var(--aqua); filter: blur(22px); opacity: .14; transform-box: fill-box; transform-origin: center; animation: halo 7s var(--ease-loop) infinite; }
-@keyframes halo { 0%, 100% { opacity: .1; transform: scale(.96); } 50% { opacity: .2; transform: scale(1.04); } }
+.hub-svg .core .core-halo { stroke: none; opacity: .14; transform-box: fill-box; transform-origin: center; animation: halo 7s var(--ease-loop) infinite; }
+@keyframes halo { 0%, 100% { opacity: .22; transform: scale(.96); } 50% { opacity: .4; transform: scale(1.04); } }
 .hub-svg .core .sub { fill: var(--on-aqua-soft); }
 /* staged entry: inputs slide in, wires wipe toward the core, core locks, outputs follow */
 .hub-svg .node, .hub-svg .core, .hub-svg .wires-in, .hub-svg .wires-out { transition: opacity var(--dur-reveal-in) var(--ease-reveal), transform var(--dur-reveal-in) var(--ease-reveal), clip-path 900ms var(--ease-in-out); transition-delay: var(--d, 0ms); }

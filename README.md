@@ -9,6 +9,7 @@ index.html          the homepage, and the master copy of the header and footer
 *.html              33 more pages (services, case studies, pricing, playbooks, blog, legal, 404)
 assets/styles.css   design tokens (dark and light), layout, components, sections
 assets/main.js      menus, theme toggle, hero story, how-it-works funnel, hub, case studies, directory
+assets/vendor       GSAP 3.13 (core, ScrollTrigger, Flip), served from the site; drives the scroll scenes and loops
 assets/logos        tool logos; assets/people holds illustrative photos
 scripts/sync-shell.py  copies the header and footer from index.html into every page
 ```
