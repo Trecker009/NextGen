@@ -40,6 +40,8 @@
   <symbol id="i-flag" viewBox="0 0 20 20"><path d="M4.5 17.5V3M4.5 3.5h10l-2 3.5 2 3.5h-10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></symbol>
   <symbol id="i-shield" viewBox="0 0 20 20"><path d="M10 2.5l6 2.5v4.5c0 4-2.6 6.8-6 8-3.4-1.2-6-4-6-8V5l6-2.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7.3 10l1.9 1.9 3.6-3.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-building" viewBox="0 0 20 20"><path d="M4 17V4h8v13M12 8h4v9M2.5 17h15M7 7h2M7 10h2M7 13h2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-user" viewBox="0 0 20 20"><circle cx="10" cy="7" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 16.5c.6-3 3-4.6 6-4.6s5.4 1.6 6 4.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 20 20"><rect x="3" y="4.5" width="14" height="12.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 8.5h14M7 2.5v3.5M13 2.5v3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7.5 12.4l1.8 1.8 3.4-3.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-close" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
   <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
   <symbol id="i-search" viewBox="0 0 20 20"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
@@ -52,14 +54,14 @@
 </svg>
 
 <!-- Promo: the signal list offer -->
-<div class="promo" id="promo">
+<div class="promo lock-dark" id="promo">
   <span class="badge signal">This week</span>
   <a href="#book">We'll bring 50 accounts in your ICP showing buying signals to the call <svg class="arrow" width="14" height="14"><use href="#i-arrow"/></svg></a>
   <button class="promo-close" aria-label="Dismiss banner" data-dismiss="promo"><svg width="14" height="14"><use href="#i-close"/></svg></button>
 </div>
 
 <!-- Header + mega-menu -->
-<header class="site-header" id="header">
+<header class="site-header lock-dark" id="header">
   <nav class="nav" aria-label="Main">
     <a href="#" class="logo" aria-label="NextGen Sales home"><span class="dot" aria-hidden="true"></span>NextGen Sales</a>
 
@@ -96,7 +98,7 @@
             <div class="mp-h"><span>&nbsp;</span></div>
             <a href="#package" class="mp-item"><span class="mp-ico mono" style="font-size:12px">04</span><span><span class="mp-t">Account-based marketing</span><span class="mp-d">Six-week sprints on big accounts.</span></span></a>
             <a href="#package" class="mp-item"><span class="mp-ico mono" style="font-size:12px">05</span><span><span class="mp-t">Content</span><span class="mp-d">What SDRs send after a call.</span></span></a>
-            <a href="#claude-code" class="mp-item"><span class="mp-ico"><svg><use href="#i-code"/></svg></span><span><span class="mp-t">Built with Claude Code</span><span class="mp-d">The agents behind every list.</span></span></a>
+            <a href="#claude-code" class="mp-item"><span class="mp-ico"><img class="lg" src="assets/logos/claude-code.svg" alt="" width="16" height="16" loading="lazy"></span><span><span class="mp-t">Built with Claude Code</span><span class="mp-d">The agents behind every list.</span></span></a>
           </div>
           <div class="mp-col" style="display:flex">
             <a href="#floor" class="mp-feature" style="flex:1">
@@ -224,10 +226,10 @@
   </nav>
   <i class="read-progress" aria-hidden="true"></i>
 </header>
-<div class="nav-scrim" id="scrim" aria-hidden="true"></div>
+<div class="nav-scrim lock-dark" id="scrim" aria-hidden="true"></div>
 
 <!-- Mobile sheet -->
-<div class="msheet" id="msheet" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true">
+<div class="msheet lock-dark" id="msheet" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true">
   <div class="msheet-top">
     <a href="#" class="logo" aria-label="NextGen Sales home"><span class="dot" aria-hidden="true"></span>NextGen Sales</a>
     <button class="burger" aria-label="Close menu" data-close-sheet style="display:grid" aria-expanded="true"><span></span><span></span></button>
@@ -260,7 +262,7 @@
 <main>
 
 <!-- 01 · Hero: centred, email capture, proof row, hero story stage -->
-<section class="hero" id="top">
+<section class="hero lock-dark" id="top">
   <canvas class="fx-field fx-hero" data-fx="beams" aria-hidden="true"></canvas>
   <div class="wrap">
     <span class="hero-pill fade-in" style="--d:0ms"><span class="live" aria-hidden="true"></span>Signal-led outbound for UK and Irish B2B</span>
@@ -291,35 +293,40 @@
         <span data-tl="0">signal <b>00:00</b></span>
         <span data-tl="1">dial <b>00:01.8</b></span>
         <span data-tl="2">booked <b>00:03.6</b></span>
-        <i class="track"></i><i class="head" data-playhead></i>
+        <i class="track"></i><i class="head" data-playhead></i><i class="mk" data-mk="0"></i><i class="mk" data-mk="1"></i><i class="mk" data-mk="2"></i><i class="knob" data-knob></i>
         <button class="stage-replay" data-replay tabindex="-1"><svg width="12" height="12"><use href="#i-replay"/></svg>replay</button>
       </div>
       <div class="stage ticks" role="img" aria-label="A hiring signal arrives, an SDR calls the Head of Sales, and the meeting is booked in HubSpot.">
-        <svg class="stage-wires" aria-hidden="true"><path data-wire="0"/><path data-wire="1"/><circle r="3" data-pkt="0"/><circle r="3" data-pkt="1"/></svg>
+        <svg class="stage-wires" aria-hidden="true"><path data-wire="0"/><path data-wire="1"/></svg>
 
         <div class="signal-card beat arrive" data-beat="signal">
           <div class="top"><span class="chrome"><span class="sig">signal · hiring</span></span><span class="data muted">2d ago</span></div>
           <div class="t">Acme Pay is hiring 3 SDRs</div>
           <div class="d">Fintech, Dublin, ICP tier A</div>
+          <div class="roles" aria-hidden="true"><i><svg><use href="#i-user"/></svg></i><i><svg><use href="#i-user"/></svg></i><i><svg><use href="#i-user"/></svg></i></div>
+          <i class="burst" aria-hidden="true"></i>
         </div>
 
         <div class="call-row beat" data-beat="call">
           <span class="avatar">AM</span>
           <span class="who"><b>Acme Pay</b><span>Aoife M. · Ciara Byrne, Head of Sales</span></span>
+          <span class="voice" data-voice aria-hidden="true"></span>
           <span class="badge neutral" data-call-badge>Dialling</span>
           <span class="data" data-call-timer>00:00</span>
+          <i class="burst" aria-hidden="true"></i>
         </div>
 
         <div class="hs-card beat" data-beat="crm">
           <i class="lock-bk tl"></i><i class="lock-bk tr"></i><i class="lock-bk bl"></i><i class="lock-bk br"></i>
-          <span class="chrome">hubspot · meetings</span>
+          <span class="chrome lg-label"><img class="lg" src="assets/logos/hubspot.svg" alt="" width="16" height="16" loading="lazy">hubspot · meetings</span>
           <div class="head"><span class="title">Discovery call, Thu 10:00</span><span class="badge booked">Meeting booked</span></div>
           <dl>
-            <dt>Contact</dt><dd>Ciara Byrne, Head of Sales</dd>
-            <dt>Company</dt><dd>Acme Pay</dd>
-            <dt>Owner</dt><dd>James O'Haire</dd>
-            <dt>Source</dt><dd>SDR call, signal: hiring</dd>
+            <dt>Contact</dt><dd><span>Ciara Byrne, Head of Sales</span></dd>
+            <dt>Company</dt><dd><span>Acme Pay</span></dd>
+            <dt>Owner</dt><dd><span>James O'Haire</span></dd>
+            <dt>Source</dt><dd><span>SDR call, signal: hiring</span></dd>
           </dl>
+          <i class="burst" aria-hidden="true"></i>
         </div>
       </div>
     </div>
@@ -344,7 +351,7 @@
 </section>
 
 <!-- 03 · The problem -->
-<section class="sec tone-alt" id="why">
+<section class="sec lock-light" id="why">
   <div class="wrap">
     <div class="sec-head rv">
       <span class="eyebrow">why outbound stalls</span>
@@ -354,26 +361,26 @@
       <div class="dial-rail" aria-hidden="true"><span class="count"><b data-dial-n>01</b> / 03</span><span class="track"><i data-dial-dot></i></span></div>
       <div class="pa">
         <div class="pa-row rv">
-          <span class="pain">Lists are cold</span>
+          <div class="pain-col"><svg class="st-ico pain-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><path d="M32 4v56"/><path d="M23 11l9 7 9-7M23 53l9-7 9 7"/></g><g class="ip" style="--i:1"><path d="M7.8 18l48.4 28M56.2 18L7.8 46"/></g></svg><span class="pain">Lists are cold</span></div>
           <span class="to" aria-hidden="true"><svg width="16" height="16"><use href="#i-arrow"/></svg></span>
-          <div class="ans"><h3 class="h3">Signals <span class="badge signal">signal</span></h3><p>Funding, hiring and leadership changes surface the accounts with a reason to buy this week, not last quarter.</p></div>
+          <svg class="st-ico ans-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><circle cx="32" cy="32" r="4"/></g><g class="ip" style="--i:1"><path d="M20 44a17 17 0 0 1 0-24M44 20a17 17 0 0 1 0 24"/></g><g class="ip" style="--i:2"><path d="M11 53a30 30 0 0 1 0-42M53 11a30 30 0 0 1 0 42"/></g></svg><div class="ans"><h3 class="h3">Signals <span class="badge signal">signal</span></h3><p>Funding, hiring and leadership changes surface the accounts with a reason to buy this week, not last quarter.</p></div>
         </div>
         <div class="pa-row rv">
-          <span class="pain">Email alone is ignored</span>
+          <div class="pain-col"><svg class="st-ico pain-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><path d="M60 30V18a6 6 0 0 0-6-6H10a6 6 0 0 0-6 6v28a6 6 0 0 0 6 6h24M6 16l26 19 26-19"/></g><g class="ip" style="--i:1"><path d="M45 45l13 13M58 45L45 58"/></g></svg><span class="pain">Email alone is ignored</span></div>
           <span class="to" aria-hidden="true"><svg width="16" height="16"><use href="#i-arrow"/></svg></span>
-          <div class="ans"><h3 class="h3">Humans on the phone <span class="badge connected">Connected</span></h3><p>Named SDRs call the accounts that open, click or show intent. 60 to 80 dials a day each, every call recorded.</p></div>
+          <svg class="st-ico ans-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><path transform="scale(2.66667)" stroke-width="1.5" d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></g><g class="ip" style="--i:1"><path transform="scale(2.66667)" stroke-width="1.5" d="M14.05 6A5 5 0 0 1 18 10"/></g><g class="ip" style="--i:2"><path transform="scale(2.66667)" stroke-width="1.5" d="M14.05 2a9 9 0 0 1 8 7.94"/></g></svg><div class="ans"><h3 class="h3">Humans on the phone <span class="badge connected">Connected</span></h3><p>Named SDRs call the accounts that open, click or show intent. 60 to 80 dials a day each, every call recorded.</p></div>
         </div>
         <div class="pa-row rv">
-          <span class="pain">Agencies hide behind dashboards</span>
+          <div class="pain-col"><svg class="st-ico pain-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><rect x="4" y="6" width="56" height="42" rx="6"/><path d="M22 58h20M32 48v10"/></g><g class="ip" style="--i:1"><path d="M18 36v-8M32 36V18M46 36V26"/></g></svg><span class="pain">Agencies hide behind dashboards</span></div>
           <span class="to" aria-hidden="true"><svg width="16" height="16"><use href="#i-arrow"/></svg></span>
-          <div class="ans"><h3 class="h3">Inside your CRM <span class="badge booked">Meeting booked</span></h3><p>Every touch, note and booked meeting lands in your HubSpot or Salesforce and your Slack. You keep the data.</p></div>
+          <svg class="st-ico ans-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><rect x="4" y="8" width="56" height="48" rx="8"/></g><g class="ip" style="--i:1"><path d="M4 23h56"/></g><g class="ip" style="--i:2"><path d="M20 40l8 8 16-16"/></g></svg><div class="ans"><h3 class="h3">Inside your CRM <span class="badge booked">Meeting booked</span></h3><p>Every touch, note and booked meeting lands in your <span class="lg-word"><img class="lg" src="assets/logos/hubspot.svg" alt="" width="16" height="16" loading="lazy">HubSpot</span> or <span class="lg-word"><img class="lg" src="assets/logos/salesforce.svg" alt="" width="16" height="16" loading="lazy">Salesforce</span> and your <span class="lg-word"><img class="lg" src="assets/logos/slack.svg" alt="" width="16" height="16" loading="lazy">Slack</span>. You keep the data.</p></div>
         </div>
       </div>
     </div>
     <div class="pa-stats">
-      <div class="metric-tile rv"><span class="metric-s">6–9 mo</span><span class="metric-label">to hire and ramp an in-house SDR team</span></div>
-      <div class="metric-tile rv" style="--d:60ms"><span class="metric-s">€100–200k</span><span class="metric-label">a year for a small team, before the first meeting</span></div>
-      <div class="metric-tile rv" style="--d:120ms"><span class="metric-s tbc" title="Source needed">40%</span><span class="metric-label">of new SDRs leave within their first year</span></div>
+      <div class="metric-tile rv"><svg class="st-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><rect x="6" y="10" width="52" height="48" rx="8"/><path d="M6 26h52M20 4v12M44 4v12"/></g><g class="ip" style="--i:1"><path d="M32 35v9h8"/></g></svg><span class="metric-s">6–9 mo</span><span class="metric-label">to hire and ramp an in-house SDR team</span></div>
+      <div class="metric-tile rv" style="--d:60ms"><svg class="st-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><circle cx="32" cy="32" r="28"/></g><g class="ip" style="--i:1"><path d="M42 22.5a13 13 0 1 0 0 19M17 28h17M17 36h17"/></g></svg><span class="metric-s">€100–200k</span><span class="metric-label">a year for a small team, before the first meeting</span></div>
+      <div class="metric-tile rv" style="--d:120ms"><svg class="st-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><path d="M26 58H12a6 6 0 0 1-6-6V12a6 6 0 0 1 6-6h14"/></g><g class="ip" style="--i:1"><path d="M24 32h34M45 19l13 13-13 13"/></g></svg><span class="metric-s tbc" title="Source needed">40%</span><span class="metric-label">of new SDRs leave within their first year</span></div>
     </div>
 
     <div class="cmp-wrap rv">
@@ -390,7 +397,7 @@
             <tr><th scope="row">Time to first meeting</th><td class="us"><span class="y">~14 days</span></td><td><span class="n2">6–9 months</span></td><td><span class="m">Weeks</span></td><td><span class="m">4–8 weeks</span></td></tr>
             <tr><th scope="row">Call QA and supervisors</th><td class="us"><span class="y">4 supervisors live</span></td><td><span class="m">If you hire them</span></td><td><span class="n2">No</span></td><td><span class="m">Rarely</span></td></tr>
             <tr><th scope="row">Terms</th><td class="us"><span class="y tbc" title="Month to month or quarterly: decision for Luke">Month to month</span></td><td><span class="n2">Employment contracts</span></td><td><span class="m">Annual seats</span></td><td><span class="m">Retainers</span></td></tr>
-            <tr><th scope="row">Works in your CRM</th><td class="us"><span class="y">HubSpot, Salesforce, Slack</span></td><td><span class="y">Yes</span></td><td><span class="m">Partly</span></td><td><span class="n2">Their dashboard</span></td></tr>
+            <tr><th scope="row">Works in your CRM</th><td class="us"><span class="y">HubSpot, Salesforce, Slack <span class="lg-set"><img class="lg" src="assets/logos/hubspot.svg" alt="" width="16" height="16" loading="lazy"><img class="lg" src="assets/logos/salesforce.svg" alt="" width="16" height="16" loading="lazy"><img class="lg" src="assets/logos/slack.svg" alt="" width="16" height="16" loading="lazy"></span></span></td><td><span class="y">Yes</span></td><td><span class="m">Partly</span></td><td><span class="n2">Their dashboard</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -399,7 +406,7 @@
 </section>
 
 <!-- 04 · How it works: the product, explained -->
-<section class="sec" id="how">
+<section class="sec lock-dark" id="how">
   <div class="fn-scroll" data-funnel>
     <div class="fn-sticky">
       <div class="wrap">
@@ -416,9 +423,10 @@
         </div>
 
         <div class="fn-stage" role="img" aria-label="2,400 accounts are filtered by buying signals to 38, SDRs make 112 calls, and 5 meetings land in HubSpot this week.">
+          <svg class="fn-wires" data-fn-wires aria-hidden="true"></svg>
           <div class="fn-zone">
             <span class="chrome"><span>your market</span><span>2,400</span></span>
-            <div class="fn-cloud" data-cloud><span class="fn-gate"><i data-gate></i></span></div>
+            <div class="fn-cloud" data-cloud><i class="fn-beam" data-beam></i></div>
           </div>
           <div class="fn-zone">
             <span class="chrome"><span class="sig">signals · this week</span></span>
@@ -436,7 +444,7 @@
             <div class="call-row fn-call" data-call><span class="avatar">CD</span><span class="who"><b>RegTech, Leeds</b><span>Ciarán D. · COO</span></span><span class="badge neutral" data-badge>Dialling</span></div>
           </div>
           <div class="fn-zone">
-            <span class="chrome"><span class="ok">hubspot · meetings</span></span>
+            <span class="chrome"><span class="ok lg-label"><img class="lg" src="assets/logos/hubspot.svg" alt="" width="16" height="16" loading="lazy">hubspot · meetings</span></span>
             <div class="fn-booked" data-booked>
               <i class="lock-bk tl"></i><i class="lock-bk tr"></i><i class="lock-bk bl"></i><i class="lock-bk br"></i>
               <span class="badge booked">Meeting booked</span>
@@ -451,6 +459,7 @@
               </ul>
             </div>
           </div>
+          <div class="fn-fly-layer" data-fly-layer aria-hidden="true"></div>
         </div>
 
         <div class="steps">
@@ -479,7 +488,7 @@
 </section>
 
 <!-- 05 · The package -->
-<section class="sec tone-alt" id="package">
+<section class="sec lock-light" id="package">
   <div class="wrap">
     <div class="sec-head rv">
       <span class="eyebrow">the package</span>
@@ -491,7 +500,7 @@
         <div class="top"><h3 class="h4">Outbound</h3><span class="chip">Retainer</span></div>
         <p class="sit">You need a steady flow of booked meetings and don't want to build the machine.</p>
         <div class="stack" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></div>
-        <ul><li>Signal-led account lists</li><li>Email and LinkedIn sequences</li><li>Reply agent, human approved</li></ul>
+        <ul><li>Signal-led account lists</li><li><span>Email and <span class="lg-word"><img class="lg" src="assets/logos/linkedin.svg" alt="" width="16" height="16" loading="lazy">LinkedIn</span> sequences</span></li><li>Reply agent, human approved</li></ul>
         <p class="price">from <b>€3.5k</b> a month</p>
         <a href="#book" class="btn btn-secondary">Start with Outbound</a>
       </article>
@@ -525,23 +534,23 @@
       <div class="layer-view">
         <div class="layer-pane is-active" role="tabpanel" id="lp-1" aria-labelledby="lt-1">
           <div class="body"><span class="chip">Retainer</span><h3 class="h3">Automated outbound</h3><p>Signal-led lists, written sequences and a reply agent, running from your domains with warmed inboxes.</p><ul><li>~600k emails a month across clients</li><li>Deliverability checked daily</li><li>Replies triaged, humans approve</li></ul></div>
-          <div class="mini"><span class="chrome">sequence · uk fintech</span><div class="ln"><span>Step 1 · Email</span><span class="data">sent 412</span></div><div class="ln"><span>Step 2 · LinkedIn</span><span class="data">38% accepted</span></div><div class="ln"><span>Step 3 · Email</span><span class="data">6.1% replied</span></div><div class="ln"><span>Step 4 · Call queue</span><span class="badge connected">Aoife M.</span></div></div>
+          <div class="mini"><span class="chrome">sequence · uk fintech</span><div class="ln"><span>Step 1 · Email</span><span class="data">sent 412</span></div><div class="ln"><span class="lg-label">Step 2 · LinkedIn <img class="lg" src="assets/logos/linkedin.svg" alt="" width="16" height="16" loading="lazy"></span><span class="data">38% accepted</span></div><div class="ln"><span>Step 3 · Email</span><span class="data">6.1% replied</span></div><div class="ln"><span>Step 4 · Call queue</span><span class="badge connected">Aoife M.</span></div></div>
         </div>
         <div class="layer-pane" role="tabpanel" id="lp-2" aria-labelledby="lt-2">
           <div class="body"><span class="chip">Retainer</span><h3 class="h3">SDRs on top</h3><p>Trained SDRs in Dublin and London call the accounts the outbound layer warmed up. Supervisors review calls daily.</p><ul><li>30+ SDRs and 4 supervisors live</li><li>60–80 dials a day per SDR</li><li>Irish and UK time slots</li></ul></div>
           <div class="mini"><span class="chrome">call log · today</span><div class="ln"><span>Fintech, Dublin</span><span class="badge booked">Meeting booked</span></div><div class="ln"><span>Insurtech, London</span><span class="badge voicemail">Voicemail</span></div><div class="ln"><span>RegTech, Leeds</span><span class="badge noanswer">No answer</span></div><div class="ln"><span>Payments, Cork</span><span class="badge connected">Connected</span></div></div>
         </div>
         <div class="layer-pane" role="tabpanel" id="lp-3" aria-labelledby="lt-3">
-          <div class="body"><span class="chip">Campaign</span><h3 class="h3">Paid media for inbound</h3><p>LinkedIn and Google ads aimed at the same target accounts, so your SDRs call people who've already seen you.</p><ul><li>Account-matched audiences</li><li>Ad engagement feeds the call queue</li><li>Pipeline attributed per channel</li></ul></div>
-          <div class="mini"><span class="chrome">linkedin · target accounts</span><div class="ln"><span>Accounts reached</span><span class="data">184 / 240</span></div><div class="ln"><span>Engaged this week</span><span class="data">31</span></div><div class="ln"><span>Sent to call queue</span><span class="data">12</span></div></div>
+          <div class="body"><span class="chip">Campaign</span><h3 class="h3">Paid media for inbound</h3><p><span class="lg-word"><img class="lg" src="assets/logos/linkedin.svg" alt="" width="16" height="16" loading="lazy">LinkedIn</span> and <span class="lg-word"><img class="lg" src="assets/logos/google.svg" alt="" width="16" height="16" loading="lazy">Google</span> ads aimed at the same target accounts, so your SDRs call people who've already seen you.</p><ul><li>Account-matched audiences</li><li>Ad engagement feeds the call queue</li><li>Pipeline attributed per channel</li></ul></div>
+          <div class="mini"><span class="chrome lg-label"><img class="lg" src="assets/logos/linkedin.svg" alt="" width="16" height="16" loading="lazy">linkedin · target accounts</span><div class="ln"><span>Accounts reached</span><span class="data">184 / 240</span></div><div class="ln"><span>Engaged this week</span><span class="data">31</span></div><div class="ln"><span>Sent to call queue</span><span class="data">12</span></div></div>
         </div>
         <div class="layer-pane" role="tabpanel" id="lp-4" aria-labelledby="lt-4">
           <div class="body"><span class="chip">Sprint</span><h3 class="h3">Account-based marketing</h3><p>Six-week sprints on a short list of big accounts: research, ads, direct mail and calls around each buying group.</p><ul><li>10–50 named accounts</li><li>Buying-group maps</li><li>Weekly account reviews</li></ul></div>
           <div class="mini"><span class="chrome">sprint · week 3 of 6</span><div class="ln"><span>Accounts engaged</span><span class="data">14 / 25</span></div><div class="ln"><span>Buyers mapped</span><span class="data">112</span></div><div class="ln"><span>Meetings</span><span class="data">5</span></div></div>
         </div>
         <div class="layer-pane" role="tabpanel" id="lp-5" aria-labelledby="lt-5">
-          <div class="body"><span class="chip">Retainer</span><h3 class="h3">Content</h3><p>Posts, one-pagers and case studies your SDRs can send after a call, written in British and Irish English.</p><ul><li>Founder-led LinkedIn</li><li>Sales one-pagers per segment</li><li>Answers built for AI search</li></ul></div>
-          <div class="mini"><span class="chrome">this month</span><div class="ln"><span>LinkedIn posts</span><span class="data">12</span></div><div class="ln"><span>One-pagers</span><span class="data">3</span></div><div class="ln"><span>Sent by SDRs after calls</span><span class="data">41</span></div></div>
+          <div class="body"><span class="chip">Retainer</span><h3 class="h3">Content</h3><p>Posts, one-pagers and case studies your SDRs can send after a call, written in British and Irish English.</p><ul><li>Founder-led <span class="lg-word"><img class="lg" src="assets/logos/linkedin.svg" alt="" width="16" height="16" loading="lazy">LinkedIn</span></li><li>Sales one-pagers per segment</li><li>Answers built for AI search</li></ul></div>
+          <div class="mini"><span class="chrome">this month</span><div class="ln"><span class="lg-label"><img class="lg" src="assets/logos/linkedin.svg" alt="" width="16" height="16" loading="lazy">LinkedIn posts</span><span class="data">12</span></div><div class="ln"><span>One-pagers</span><span class="data">3</span></div><div class="ln"><span>Sent by SDRs after calls</span><span class="data">41</span></div></div>
         </div>
       </div>
     </div>
@@ -582,7 +591,7 @@
           <div class="case-metrics"><span class="chip strong mono">IHG closed-won</span><span class="chip strong mono">NerdWallet closed-won</span><span class="chip strong mono">US → Europe</span></div>
           <div class="case-body">
             <div class="rec">
-              <span class="chrome rec-top"><span>hubspot · deals</span><span class="data">closed-won</span></span>
+              <span class="chrome rec-top"><span class="lg-label"><img class="lg" src="assets/logos/hubspot.svg" alt="" width="16" height="16" loading="lazy">hubspot · deals</span><span class="data">closed-won</span></span>
               <div class="mini" style="align-self:stretch">
                 <div class="ln"><span>IHG</span><span class="badge booked">Closed-won</span></div>
                 <div class="ln"><span>NerdWallet</span><span class="badge booked">Closed-won</span></div>
@@ -645,7 +654,7 @@
 </section>
 
 <!-- 07 · What clients say -->
-<section class="sec tone-alt voices" id="voices">
+<section class="sec lock-light voices" id="voices">
   <div class="wrap">
     <div class="voices-head rv">
       <div class="sec-head" style="margin:0">
@@ -682,12 +691,12 @@
     </div>
     <div class="cc">
       <div class="term-win rv" data-term>
-        <div class="bar"><i></i><i></i><i></i><span class="chrome">claude-code · signal-scraper</span></div>
+        <div class="bar"><i></i><i></i><i></i><span class="chrome lg-label"><img class="lg" src="assets/logos/claude-code.svg" alt="" width="16" height="16" loading="lazy">claude-code · signal-scraper</span></div>
         <div class="body">
           <div class="line" style="transition-delay:0ms"><span class="p">&gt;</span> <span class="p">Flag Irish fintechs hiring SDRs and push them to HubSpot</span></div>
           <div class="line" style="transition-delay:300ms">&nbsp; Searching job boards, 1,284 postings</div>
           <div class="line" style="transition-delay:600ms">&nbsp; Matching ICP, 312 companies, enriching contacts</div>
-          <div class="line ok" style="transition-delay:900ms">✓ 47 accounts added to HubSpot, Slack #signals notified</div>
+          <div class="line ok" style="transition-delay:900ms">✓ 47 accounts added to <span class="lg-word"><img class="lg" src="assets/logos/hubspot.svg" alt="" width="16" height="16" loading="lazy">HubSpot</span>, <span class="lg-word"><img class="lg" src="assets/logos/slack.svg" alt="" width="16" height="16" loading="lazy">Slack</span> #signals notified</div>
           <div class="line" style="transition-delay:1200ms"><span class="p">&gt;</span> <span class="caret-blink"></span></div>
         </div>
       </div>
@@ -705,8 +714,8 @@
         </table>
       </div>
       <div class="cc-card slack rv" style="--d:120ms">
-        <span class="chrome" style="margin:0"><span>slack · #wins</span><span></span></span>
-        <div class="slack-msg"><span class="avatar">N</span><div><div class="meta">NextGen bot<span class="data">10:42</span></div>New meeting booked with Acme Pay for Thursday at 10:00.<div class="note">Booked by Aoife M. after a 6:41 call<br>Synced to HubSpot, #wins</div></div></div>
+        <span class="chrome" style="margin:0"><span class="lg-label"><img class="lg" src="assets/logos/slack.svg" alt="" width="16" height="16" loading="lazy">slack · #wins</span><span></span></span>
+        <div class="slack-msg"><span class="avatar">N</span><div><div class="meta">NextGen bot<span class="data">10:42</span></div>New meeting booked with Acme Pay for Thursday at 10:00.<div class="note">Booked by Aoife M. after a 6:41 call<br>Synced to <span class="lg-word"><img class="lg" src="assets/logos/hubspot.svg" alt="" width="16" height="16" loading="lazy">HubSpot</span>, #wins</div></div></div>
         <div class="slack-msg"><span class="avatar">N</span><div><div class="meta">NextGen bot<span class="data">10:15</span></div>Callum approved 2 accounts for today's call queue.</div></div>
       </div>
     </div>
@@ -728,14 +737,14 @@
     </div>
     <div class="ninety">
       <div class="phases rv">
-        <div class="phase"><span class="d">days 1–14</span><h3 class="h4">Live</h3><p>CRM connected, first list built, a named SDR on the phone.</p><span class="bar"><i style="--d:0ms"></i></span></div>
-        <div class="phase"><span class="d">days 15–45</span><h3 class="h4">Expand</h3><p>More signals, more segments, first meetings reviewed together.</p><span class="bar"><i style="--d:150ms"></i></span></div>
-        <div class="phase"><span class="d">days 46–75</span><h3 class="h4">Scale</h3><p>Add SDRs or channels where the numbers say so.</p><span class="bar"><i style="--d:300ms"></i></span></div>
-        <div class="phase"><span class="d">days 76–90</span><h3 class="h4">Compound</h3><p>Plays that work get doubled; the rest get rebuilt.</p><span class="bar"><i style="--d:450ms"></i></span></div>
+        <div class="phase"><span class="d">days 1–14</span><h3 class="h4">Live</h3><p>CRM connected, first list built, a named SDR on the phone.</p><span class="days" style="--n:14" aria-hidden="true"><i style="--d:0ms;--t:320ms"></i></span></div>
+        <div class="phase"><span class="d">days 15–45</span><h3 class="h4">Expand</h3><p>More signals, more segments, first meetings reviewed together.</p><span class="days" style="--n:31" aria-hidden="true"><i style="--d:320ms;--t:700ms"></i></span></div>
+        <div class="phase"><span class="d">days 46–75</span><h3 class="h4">Scale</h3><p>Add SDRs or channels where the numbers say so.</p><span class="days" style="--n:30" aria-hidden="true"><i style="--d:1020ms;--t:680ms"></i></span></div>
+        <div class="phase hl"><span class="d">days 76–90</span><h3 class="h4">Compound</h3><p>Plays that work get doubled; the rest get rebuilt.</p><span class="days" style="--n:15" aria-hidden="true"><i style="--d:1700ms;--t:340ms"></i></span></div>
       </div>
       <div class="calc rv" id="calculator">
-        <div><span class="eyebrow">sdr cost calculator</span><h3 class="h4" style="margin-top:var(--space-2)">What would an in-house team cost you?</h3></div>
-        <div class="seg" role="group" aria-label="Market">
+        <div class="calc-head"><span class="eyebrow">sdr cost calculator</span><h3 class="h4" style="margin-top:var(--space-2)">What would an in-house team cost you?</h3></div>
+        <div class="calc-in"><div class="seg" role="group" aria-label="Market">
           <span class="seg-ind" aria-hidden="true"></span>
           <button type="button" aria-pressed="true" data-market="dub">Dublin</button>
           <button type="button" aria-pressed="false" data-market="lon">London</button>
@@ -744,21 +753,21 @@
         <div class="range-row">
           <label for="sdr-n">SDRs <b data-sdr-n>2</b></label>
           <input id="sdr-n" type="range" min="1" max="10" value="2">
-        </div>
+        </div></div>
         <div class="calc-out">
           <span class="metric-label">Year one, fully loaded</span>
           <span class="metric" data-calc-val>€191,947</span>
           <span class="caption" data-calc-sub>Salary, on-costs, tooling and a share of a team lead, before the first meeting.</span>
         </div>
-        <a href="#book" class="btn btn-secondary" style="justify-self:start">Compare with NextGen on a call</a>
-        <p class="caption">Illustrative. Base salaries from Morgan McKinley Ireland 2026 and Skipcall UK 2026 guides; defaults to confirm with Luke.</p>
+        <a href="#book" class="btn btn-secondary calc-cta">Compare with NextGen on a call</a>
+        <p class="caption calc-note">Illustrative. Base salaries from Morgan McKinley Ireland 2026 and Skipcall UK 2026 guides; defaults to confirm with Luke.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- 08 · Who's on the phone + track record -->
-<section class="sec tone-alt" id="floor">
+<section class="sec lock-light" id="floor">
   <div class="wrap">
     <div class="sec-head rv">
       <span class="eyebrow">who's on the phone</span>
@@ -766,10 +775,10 @@
       <p class="lead">You'll know your SDRs by name. Supervisors listen in every day and coach on the calls that matter.</p>
     </div>
     <div class="floor">
-      <article class="sdr-card rv"><div class="sdr-photo"><span class="ph chrome">photo · consent tbc</span><span class="silhouette" aria-hidden="true"></span><span class="badge connected">Connected</span></div><div class="sdr-meta"><b>Aoife M.</b><span>SDR · Dublin · fintech</span></div></article>
-      <article class="sdr-card rv" style="--d:60ms"><div class="sdr-photo"><span class="ph chrome">photo · consent tbc</span><span class="silhouette" aria-hidden="true"></span><span class="badge booked">Meeting booked</span></div><div class="sdr-meta"><b>Callum R.</b><span>SDR · London · insurtech</span></div></article>
-      <article class="sdr-card rv" style="--d:120ms"><div class="sdr-photo"><span class="ph chrome">photo · consent tbc</span><span class="silhouette" aria-hidden="true"></span><span class="badge voicemail">Voicemail</span></div><div class="sdr-meta"><b>Niamh K.</b><span>SDR · Dublin · SaaS</span></div></article>
-      <article class="sdr-card rv" style="--d:180ms"><div class="sdr-photo"><span class="ph chrome">photo · consent tbc</span><span class="silhouette" aria-hidden="true"></span><span class="badge neutral">Reviewing calls</span></div><div class="sdr-meta"><b>Ciarán D.</b><span>Supervisor · Dublin</span></div></article>
+      <article class="sdr-card rv"><div class="sdr-photo"><img src="assets/people/sdr-1.jpg" alt="" width="640" height="672" loading="lazy"><span class="ph chrome tbc" title="Placeholder stock photo: replace with an approved headshot">photo · consent tbc</span><span class="badge connected">Connected</span></div><div class="sdr-meta"><b>Aoife M.</b><span>SDR · Dublin · fintech</span></div></article>
+      <article class="sdr-card rv" style="--d:60ms"><div class="sdr-photo"><img src="assets/people/sdr-2.jpg" alt="" width="640" height="672" loading="lazy"><span class="ph chrome tbc" title="Placeholder stock photo: replace with an approved headshot">photo · consent tbc</span><span class="badge booked">Meeting booked</span></div><div class="sdr-meta"><b>Callum R.</b><span>SDR · London · insurtech</span></div></article>
+      <article class="sdr-card rv" style="--d:120ms"><div class="sdr-photo"><img src="assets/people/sdr-3.jpg" alt="" width="640" height="672" loading="lazy"><span class="ph chrome tbc" title="Placeholder stock photo: replace with an approved headshot">photo · consent tbc</span><span class="badge voicemail">Voicemail</span></div><div class="sdr-meta"><b>Niamh K.</b><span>SDR · Dublin · SaaS</span></div></article>
+      <article class="sdr-card rv" style="--d:180ms"><div class="sdr-photo"><img src="assets/people/sdr-4.jpg" alt="" width="640" height="672" loading="lazy"><span class="ph chrome tbc" title="Placeholder stock photo: replace with an approved headshot">photo · consent tbc</span><span class="badge neutral">Reviewing calls</span></div><div class="sdr-meta"><b>Ciarán D.</b><span>Supervisor · Dublin</span></div></article>
     </div>
     <div class="facts" id="track">
       <div class="fact rv"><span class="metric">50+</span><span class="metric-label">SDRs at peak, one client</span></div>
@@ -780,10 +789,10 @@
     </div>
     <div class="partners rv">
       <span class="eyebrow">partners</span>
-      <span class="chip strong">HubSpot <span class="tbc" title="Tier to confirm">Solutions</span></span>
-      <span class="chip strong">LinkedIn <span class="tbc" title="Tier to confirm">Marketing</span></span>
-      <span class="chip strong">Google <span class="tbc" title="Tier to confirm">Partner</span></span>
-      <span class="chip strong">Clay</span><span class="chip strong">Smartlead</span><span class="chip strong">Instantly</span><span class="chip strong">Aircall</span><span class="chip strong">Claude Code</span>
+      <span class="chip strong"><span class="lg-tile"><img class="lg" src="assets/logos/hubspot.svg" alt="" width="16" height="16" loading="lazy"></span>HubSpot <span class="tbc" title="Tier to confirm">Solutions</span></span>
+      <span class="chip strong"><span class="lg-tile"><img class="lg" src="assets/logos/linkedin.svg" alt="" width="16" height="16" loading="lazy"></span>LinkedIn <span class="tbc" title="Tier to confirm">Marketing</span></span>
+      <span class="chip strong"><span class="lg-tile"><img class="lg" src="assets/logos/google.svg" alt="" width="16" height="16" loading="lazy"></span>Google <span class="tbc" title="Tier to confirm">Partner</span></span>
+      <span class="chip strong"><span class="lg-tile"><img class="lg" src="assets/logos/clay.png" alt="" width="16" height="16" loading="lazy"></span>Clay</span><span class="chip strong"><span class="lg-tile"><img class="lg" src="assets/logos/smartlead.png" alt="" width="16" height="16" loading="lazy"></span>Smartlead</span><span class="chip strong"><span class="lg-tile"><img class="lg" src="assets/logos/instantly.png" alt="" width="16" height="16" loading="lazy"></span>Instantly</span><span class="chip strong"><span class="lg-tile"><img class="lg" src="assets/logos/aircall.png" alt="" width="16" height="16" loading="lazy"></span>Aircall</span><span class="chip strong"><span class="lg-tile"><img class="lg" src="assets/logos/claude-code.svg" alt="" width="16" height="16" loading="lazy"></span>Claude Code</span>
     </div>
   </div>
 </section>
@@ -816,7 +825,7 @@
       <div class="founder-ph"><span class="chrome">headshot</span></div>
       <div>
         <blockquote>I built NextGen because every outbound agency I hired either sent emails nobody read or called like a call centre. <span class="muted">We do both properly, and you'll know every person on your account.</span></blockquote>
-        <div class="sig"><b>Luke Lawlor</b><span>Founder, NextGen Sales</span><a href="#" class="btn btn-ghost" style="font-size:15px"><span>LinkedIn, <span class="tbc" title="Follower count to confirm">[xx]k</span> followers</span><svg class="arrow" width="13" height="13"><use href="#i-arrow"/></svg></a></div>
+        <div class="sig"><b>Luke Lawlor</b><span>Founder, NextGen Sales</span><a href="#" class="btn btn-ghost" style="font-size:15px"><img class="lg" src="assets/logos/linkedin.svg" alt="" width="16" height="16" loading="lazy"><span>LinkedIn, <span class="tbc" title="Follower count to confirm">[xx]k</span> followers</span><svg class="arrow" width="13" height="13"><use href="#i-arrow"/></svg></a></div>
       </div>
     </div>
   </div>
@@ -843,12 +852,11 @@
 </section>
 
 <!-- Final call to action -->
-<section class="closing" id="book">
+<section class="closing lock-dark" id="book">
   <div class="wrap">
     <div class="closing-panel ticks rv">
       <div class="closing-fx" aria-hidden="true">
-        <span class="wordmark">NextGen</span>
-        <canvas class="fx-field" data-fx="horizon"></canvas>
+        <canvas class="fx-field" data-fx="converge"></canvas>
       </div>
       <span class="eyebrow">book your strategy call</span>
       <h2 class="h2 split">See what a NextGen engine looks like for your business.</h2>
@@ -866,9 +874,9 @@
 
 </main>
 
-<footer class="footer">
+<footer class="footer lock-dark">
   <div class="wrap">
-    <div class="foot-top">
+    <div class="foot-top" data-stagger>
       <div class="foot-brand">
         <a href="#" class="logo" aria-label="NextGen Sales home"><span class="dot" aria-hidden="true"></span>NextGen Sales</a>
         <p>Signal-led outbound for UK and Irish B2B. Named SDRs, inside your CRM.</p>
@@ -884,7 +892,7 @@
       <div class="foot-col"><h4>Company</h4><a href="#founder">About</a><a href="#floor">Who's on the phone</a><a href="#">Entering the UK &amp; Ireland</a><a href="#faq">GDPR &amp; PECR</a><a href="#">Careers</a></div>
     </div>
     <div class="foot-mid">
-      <div class="ai-sum"><span>Explore an AI summary</span><a href="#" class="chip">ChatGPT</a><a href="#" class="chip">Claude</a><a href="#" class="chip">Perplexity</a><a href="#" class="chip">Google AI Mode</a><a href="#" class="chip">Grok</a></div>
+      <div class="ai-sum"><span>Explore an AI summary</span><a href="#" class="chip"><span class="lg-tile"><img class="lg" src="assets/logos/openai.svg" alt="" width="16" height="16" loading="lazy"></span>ChatGPT</a><a href="#" class="chip"><span class="lg-tile"><img class="lg" src="assets/logos/claude.svg" alt="" width="16" height="16" loading="lazy"></span>Claude</a><a href="#" class="chip"><span class="lg-tile"><img class="lg" src="assets/logos/perplexity.svg" alt="" width="16" height="16" loading="lazy"></span>Perplexity</a><a href="#" class="chip"><span class="lg-tile"><img class="lg" src="assets/logos/google.svg" alt="" width="16" height="16" loading="lazy"></span>Google AI Mode</a><a href="#" class="chip"><span class="lg-tile"><img class="lg" src="assets/logos/grok.svg" alt="" width="16" height="16" loading="lazy"></span>Grok</a></div>
       <div class="foot-theme">Theme
         <div class="theme-toggle label" role="radiogroup" aria-label="Theme" data-theme-toggle>
           <button role="radio" aria-checked="false" data-set="light"><svg><use href="#i-sun"/></svg>Light</button>
@@ -898,6 +906,7 @@
       <span><a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Cookies</a></span>
     </div>
   </div>
+  <div class="foot-mark" data-foot-mark aria-hidden="true"><div class="rise"><div class="word"><i class="glint"></i></div></div></div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
