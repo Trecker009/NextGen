@@ -1071,3 +1071,96 @@ html { scroll-behavior: smooth; }
 .tier-card .stack { display: flex; gap: 4px; }
 .tier-card .stack i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
 .tier-card .stack i.on { background: var(--ink); }
+
+/* =====================================================================
+   v4 · light fields: curtain ribbons (hero), flowing connectors (hub),
+   glow horizon + wordmark (closing), reveal timing per the motion spec.
+   Canvas fields are drawn by main.js from the colour tokens below, so
+   they follow the theme. Reduced motion gets one still frame.
+   ===================================================================== */
+:root {
+  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-loop: cubic-bezier(0.45, 0, 0.55, 1);
+  --dur-reveal-in: 560ms;
+  /* light-field + gradient text tokens (dark) */
+  --fx-ray: #19e3c1;
+  --fx-ray-hi: #7df0dc;
+  --fx-strength: 1;
+  --text-grad-from: #19e3c1;
+  --text-grad-to: #7df0dc;
+  --wordmark-ink: rgba(232, 235, 241, 0.12);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) { --fx-ray: #0fb39a; --fx-ray-hi: #19e3c1; --fx-strength: .55; --text-grad-from: #0b5e50; --text-grad-to: #0fb39a; --wordmark-ink: rgba(4, 6, 12, 0.07); }
+}
+:root[data-theme="light"] { --fx-ray: #0fb39a; --fx-ray-hi: #19e3c1; --fx-strength: .55; --text-grad-from: #0b5e50; --text-grad-to: #0fb39a; --wordmark-ink: rgba(4, 6, 12, 0.07); }
+
+/* ---------- canvas fields ---------- */
+.fx-field { display: block; pointer-events: none; opacity: 0; transition: opacity 1200ms var(--ease-reveal); }
+.fx-field.is-on { opacity: 1; }
+.hero > .fx-curtain { position: absolute; z-index: 0; inset: 0 0 auto 0; width: 100%; height: min(100%, 980px);
+  -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent); mask-image: linear-gradient(180deg, #000 70%, transparent); }
+/* keep the headline column readable over the ribbons */
+.hero .wrap > h1, .hero .wrap > .lead { text-shadow: 0 0 24px var(--canvas); }
+
+/* gradient word in the hero headline */
+.grad-text {
+  background-image: linear-gradient(100deg, var(--text-grad-from) 10%, var(--text-grad-to) 55%, var(--ink) 115%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+.hero h1 .grad-text { padding-right: .04em; }
+
+/* ---------- closing: glow horizon + faded wordmark ---------- */
+.closing-panel { padding-bottom: calc(var(--space-9) + clamp(96px, 14vw, 190px)); }
+.closing-fx { position: absolute; inset: 0; z-index: -1; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.closing-fx .fx-field { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 72%; }
+.closing-fx .wordmark {
+  position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 34%);
+  font-family: var(--sans); font-weight: 600; letter-spacing: -0.06em; line-height: 1; white-space: nowrap;
+  font-size: clamp(110px, 21vw, 300px);
+  background-image: linear-gradient(180deg, var(--wordmark-ink) 0%, transparent 78%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  opacity: 0; transition: opacity 1200ms var(--ease-reveal) 200ms, transform 1200ms var(--ease-reveal) 200ms;
+}
+.closing-panel.in .wordmark { opacity: 1; transform: translate(-50%, 24%); }
+@media (max-width: 767px) { .closing-panel { padding-bottom: calc(var(--space-7) + 96px); } }
+
+/* ---------- hub: flowing connectors into the engine ---------- */
+.hub-svg .flow { fill: none; stroke-width: 1.5; stroke-linecap: round; opacity: .55; }
+.hub-svg .trail { pointer-events: none; }
+.hub-svg .trail.sig { fill: var(--amber); }
+.hub-svg .trail.live { fill: var(--blue); }
+.hub-svg .trail.ok { fill: var(--aqua); }
+.hub-svg .trail.mute { fill: var(--ink-muted); }
+.hub-svg .core rect.core-glow { fill: none; stroke: url(#hubEdge); stroke-width: 1.5; }
+.hub-svg .core rect.core-halo { stroke: none; fill: var(--aqua); filter: blur(22px); opacity: .14; transform-box: fill-box; transform-origin: center; animation: halo 7s var(--ease-loop) infinite; }
+@keyframes halo { 0%, 100% { opacity: .1; transform: scale(.96); } 50% { opacity: .2; transform: scale(1.04); } }
+.hub-svg .core .sub { fill: var(--on-aqua-soft); }
+/* staged entry: inputs slide in, wires wipe toward the core, core locks, outputs follow */
+.hub-svg .node, .hub-svg .core, .hub-svg .wires-in, .hub-svg .wires-out { transition: opacity var(--dur-reveal-in) var(--ease-reveal), transform var(--dur-reveal-in) var(--ease-reveal), clip-path 900ms var(--ease-in-out); transition-delay: var(--d, 0ms); }
+.hub-frame:not(.in) .hub-svg .node.in-node { opacity: 0; transform: translateX(-14px); }
+.hub-frame:not(.in) .hub-svg .node.out-node { opacity: 0; transform: translateX(14px); }
+.hub-frame:not(.in) .hub-svg .core { opacity: 0; transform: scale(.96); }
+.hub-svg .core { transform-box: fill-box; transform-origin: center; }
+.hub-frame:not(.in) .hub-svg .wires-in { clip-path: inset(0 100% 0 0); }
+.hub-frame:not(.in) .hub-svg .wires-out { clip-path: inset(0 100% 0 0); }
+.hub-svg.is-v .wires-in, .hub-svg.is-v .wires-out { clip-path: none !important; }
+.hub-frame:not(.in) .hub-svg.is-v .wires-in, .hub-frame:not(.in) .hub-svg.is-v .wires-out { opacity: 0; }
+.hub-frame:not(.in) .hub-svg.is-v .node.in-node { transform: translateY(-10px); }
+.hub-frame:not(.in) .hub-svg.is-v .node.out-node { transform: translateY(10px); }
+
+/* ---------- reveals per the motion spec: 560ms, rise 10px, blur 4px ---------- */
+.rv { transform: translateY(10px); filter: blur(4px);
+  transition: opacity var(--dur-reveal-in) var(--ease-reveal), transform var(--dur-reveal-in) var(--ease-reveal), filter var(--dur-reveal-in) var(--ease-reveal);
+  transition-delay: var(--d, 0ms); }
+.rv.in { filter: none; }
+.split .w > span { transition-duration: 760ms; transition-timing-function: var(--ease-reveal); transition-delay: calc(var(--i, 0) * 45ms); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-field { transition: opacity 300ms ease; }
+  .rv { filter: none !important; }
+  .closing-fx .wordmark { transform: translate(-50%, 24%) !important; transition: opacity 300ms ease; }
+  .hub-svg .core-halo { animation: none; }
+  .hub-frame .hub-svg .node, .hub-frame .hub-svg .core, .hub-frame .hub-svg .wires-in, .hub-frame .hub-svg .wires-out { transform: none !important; clip-path: none !important; }
+}
