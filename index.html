@@ -261,11 +261,12 @@
 
 <!-- 01 · Hero: centred, email capture, proof row, hero story stage -->
 <section class="hero" id="top">
+  <canvas class="fx-field fx-hero" data-fx="beams" aria-hidden="true"></canvas>
   <div class="wrap">
     <span class="hero-pill fade-in" style="--d:0ms"><span class="live" aria-hidden="true"></span>Signal-led outbound for UK and Irish B2B</span>
     <h1 class="display-xl">
       <span class="reveal-line"><span style="--d:80ms">The outbound team that actually</span></span>
-      <span class="reveal-line"><span style="--d:160ms">picks up the phone.</span></span>
+      <span class="reveal-line"><span class="grad-text" style="--d:160ms">picks up the phone.</span></span>
     </h1>
     <p class="lead fade-in" style="--d:320ms">Signals tell us who is ready. Named SDRs call them, 60–80 dials a day, and book the meeting straight into your HubSpot. You own every account, recording and report.</p>
     <div class="fade-in" style="--d:420ms">
@@ -328,7 +329,7 @@
 <!-- 02 · Logo and proof bar + testimonial cards -->
 <section class="logos" id="logos">
   <div class="wrap">
-    <div class="logo-grid rv">
+    <div class="logo-grid" data-stagger>
       <a href="#results" class="logo-cell has-case"><span class="wm">CleverCards</span><span class="stat"><b>50+ SDRs</b><span>at peak</span></span></a>
       <div class="logo-cell"><span class="wm" style="font-weight:700;letter-spacing:.02em">VIATEL</span></div>
       <a href="#results" class="logo-cell has-case"><span class="wm" style="font-weight:500">boardclic</span><span class="stat"><b class="tbc" title="Real TCV figure needed">€[xx]k</b><span>TCV in 90 days</span></span></a>
@@ -845,6 +846,10 @@
 <section class="closing" id="book">
   <div class="wrap">
     <div class="closing-panel ticks rv">
+      <div class="closing-fx" aria-hidden="true">
+        <span class="wordmark">NextGen</span>
+        <canvas class="fx-field" data-fx="horizon"></canvas>
+      </div>
       <span class="eyebrow">book your strategy call</span>
       <h2 class="h2 split">See what a NextGen engine looks like for your business.</h2>
       <p class="lead">30 minutes with an operator who runs SDR teams. Bring your KPIs; we'll bring 50 accounts in your ICP showing buying signals this week.</p>

@@ -444,58 +444,271 @@
     setMode();
   })();
 
-  /* ---------------- hub: your tools in, pipeline out ---------------- */
+  /* ---------------- hub: your tools in, pipeline out ----------------
+     Inputs slide in, their wires wipe toward the engine, the engine locks,
+     then outputs follow. Packets travel with a short comet tail; each
+     wire carries a soft gradient that brightens toward the engine. */
   (function hub() {
     const host = $('[data-hub]');
     if (!host) return;
     const ins = [['HubSpot', 'crm', 'mute'], ['Salesforce', 'crm', 'mute'], ['LinkedIn', 'intent', 'sig'], ['Clay', 'enrichment', 'sig']];
     const outs = [['Call queue', 'sdr floor', 'live'], ['Sequences', 'email · linkedin', 'mute'], ['Your calendar', 'meetings', 'ok'], ['Slack', '#wins', 'ok']];
+    const TAIL = 5;
     let packets = [], raf = 0, visible = false;
+    const stop = (o, a) => `<stop offset="${o}" stop-color="var(--aqua)" stop-opacity="${a}"/>`;
+    const lin = (id, x1, y1, x2, y2, a, b) => `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stop(0, a)}${stop(1, b)}</linearGradient>`;
+    const edge = `<linearGradient id="hubEdge" x1="0" y1="0" x2="1" y2="1">${stop(0, 0.9)}${stop(0.5, 0.15)}${stop(1, 0.9)}</linearGradient>`;
 
     function build() {
       const v = matchMedia('(max-width: 767px)').matches;
-      const node = (x, y, w, h, t, s, cls = 'node') => `<g class="${cls}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${cls === 'core' ? 12 : 8}"/>` +
-        (s ? `<text x="${x + w / 2}" y="${y + h / 2 - 3}" text-anchor="middle" font-family="Geist" font-weight="${cls === 'core' ? 600 : 500}">${t}</text><text class="sub" x="${x + w / 2}" y="${y + h / 2 + 15}" text-anchor="middle" font-family="Geist Mono" font-weight="500">${s}</text>`
-           : `<text x="${x + w / 2}" y="${y + h / 2 + 5}" text-anchor="middle" font-family="Geist" font-weight="500">${t}</text>`) + `</g>`;
-      let W, H, wires = [], nodes = '';
+      const node = (x, y, w, h, t, s, cls, d) => {
+        const core = cls === 'core';
+        return `<g class="${cls}" style="--d:${d}ms">` +
+          (core ? `<rect class="core-halo" x="${x + 16}" y="${y + 16}" width="${w - 32}" height="${h - 32}" rx="12"/>` : '') +
+          `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${core ? 12 : 8}"/>` +
+          (core ? `<rect class="core-glow" x="${x}" y="${y}" width="${w}" height="${h}" rx="12" stroke="url(#hubEdge)"/>` : '') +
+          (s ? `<text x="${x + w / 2}" y="${y + h / 2 - 3}" text-anchor="middle" font-family="Geist" font-weight="${core ? 600 : 500}">${t}</text><text class="sub" x="${x + w / 2}" y="${y + h / 2 + 15}" text-anchor="middle" font-family="Geist Mono" font-weight="500">${s}</text>`
+             : `<text x="${x + w / 2}" y="${y + h / 2 + 5}" text-anchor="middle" font-family="Geist" font-weight="500">${t}</text>`) + `</g>`;
+      };
+      let W, H, wires = [], nodes = '', grads;
       if (!v) {
         W = 1120; H = 330;
         const nw = 180, nh = 54, hx = 430, hw = 260, hh = 124, hy = (H - hh) / 2, cy = H / 2;
-        ins.forEach(([t, s], i) => { const y = 14 + i * 80; nodes += node(0, y, nw, nh, t, s); wires.push({ d: `M${nw},${y + nh / 2} C${(nw + hx) / 2},${y + nh / 2} ${(nw + hx) / 2},${cy + (i - 1.5) * 20} ${hx},${cy + (i - 1.5) * 20}`, c: ins[i][2] }); });
-        outs.forEach(([t, s], i) => { const y = 14 + i * 80, x = W - nw; nodes += node(x, y, nw, nh, t, s); wires.push({ d: `M${hx + hw},${cy + (i - 1.5) * 20} C${(hx + hw + x) / 2},${cy + (i - 1.5) * 20} ${(hx + hw + x) / 2},${y + nh / 2} ${x},${y + nh / 2}`, c: outs[i][2] }); });
-        nodes += node(hx, hy, hw, hh, 'NextGen engine', 'signals → sdrs → crm', 'core');
+        ins.forEach(([t, s], i) => { const y = 14 + i * 80; nodes += node(0, y, nw, nh, t, s, 'node in-node', i * 60); wires.push({ side: 'in', d: `M${nw},${y + nh / 2} C${(nw + hx) / 2},${y + nh / 2} ${(nw + hx) / 2},${cy + (i - 1.5) * 20} ${hx},${cy + (i - 1.5) * 20}`, c: ins[i][2] }); });
+        outs.forEach(([t, s], i) => { const y = 14 + i * 80, x = W - nw; nodes += node(x, y, nw, nh, t, s, 'node out-node', 1120 + i * 60); wires.push({ side: 'out', d: `M${hx + hw},${cy + (i - 1.5) * 20} C${(hx + hw + x) / 2},${cy + (i - 1.5) * 20} ${(hx + hw + x) / 2},${y + nh / 2} ${x},${y + nh / 2}`, c: outs[i][2] }); });
+        nodes += node(hx, hy, hw, hh, 'NextGen engine', 'signals → sdrs → crm', 'core', 760);
+        grads = lin('hubIn', nw, 0, hx, 0, 0, 0.9) + lin('hubOut', hx + hw, 0, W - nw, 0, 0.9, 0) + edge;
       } else {
         W = 358; H = 560;
         const nw = 82, nh = 46, hx = 49, hw = 260, hh = 96, hy = (H - hh) / 2, cx = W / 2;
         const short = { 'Your calendar': 'Calendar', 'Call queue': 'Calls', 'Sequences': 'Email' };
-        ins.forEach(([t], i) => { const x = i * 92; nodes += node(x, 0, nw, nh, t); wires.push({ d: `M${x + nw / 2},${nh} C${x + nw / 2},${(nh + hy) / 2} ${cx + (i - 1.5) * 24},${(nh + hy) / 2} ${cx + (i - 1.5) * 24},${hy}`, c: ins[i][2] }); });
-        outs.forEach(([t], i) => { const x = i * 92, y = H - nh; nodes += node(x, y, nw, nh, short[t] || t); wires.push({ d: `M${cx + (i - 1.5) * 24},${hy + hh} C${cx + (i - 1.5) * 24},${(hy + hh + y) / 2} ${x + nw / 2},${(hy + hh + y) / 2} ${x + nw / 2},${y}`, c: outs[i][2] }); });
-        nodes += node(hx, hy, hw, hh, 'NextGen engine', 'signals → sdrs → crm', 'core');
+        ins.forEach(([t], i) => { const x = i * 92; nodes += node(x, 0, nw, nh, t, '', 'node in-node', i * 60); wires.push({ side: 'in', d: `M${x + nw / 2},${nh} C${x + nw / 2},${(nh + hy) / 2} ${cx + (i - 1.5) * 24},${(nh + hy) / 2} ${cx + (i - 1.5) * 24},${hy}`, c: ins[i][2] }); });
+        outs.forEach(([t], i) => { const x = i * 92, y = H - nh; nodes += node(x, y, nw, nh, short[t] || t, '', 'node out-node', 1120 + i * 60); wires.push({ side: 'out', d: `M${cx + (i - 1.5) * 24},${hy + hh} C${cx + (i - 1.5) * 24},${(hy + hh + y) / 2} ${x + nw / 2},${(hy + hh + y) / 2} ${x + nw / 2},${y}`, c: outs[i][2] }); });
+        nodes += node(hx, hy, hw, hh, 'NextGen engine', 'signals → sdrs → crm', 'core', 760);
+        grads = lin('hubIn', 0, nh, 0, hy, 0, 0.9) + lin('hubOut', 0, hy + hh, 0, H - nh, 0.9, 0) + edge;
       }
-      host.innerHTML = `<svg class="hub-svg" viewBox="0 0 ${W} ${H}" aria-hidden="true">` +
-        wires.map((w, i) => `<path class="wire" id="hw${i}" d="${w.d}"/>`).join('') + nodes +
-        wires.map((w, i) => `<circle class="pkt ${w.c}" r="3.5" data-w="${i}" opacity="0"/>`).join('') + `</svg>`;
+      const group = side => wires.map((w, i) => w.side !== side ? '' :
+        `<path class="wire" id="hw${i}" d="${w.d}"/><path class="flow" d="${w.d}" stroke="url(#${side === 'in' ? 'hubIn' : 'hubOut'})"/>`).join('');
+      const dots = wires.map((w, i) => Array.from({ length: TAIL }, (_, k) =>
+        `<circle class="${k ? 'trail' : 'pkt'} ${w.c}" r="${(3.5 - k * 0.5).toFixed(1)}" data-w="${i}" opacity="0"/>`).join('')).join('');
+      host.innerHTML = `<svg class="hub-svg${v ? ' is-v' : ''}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs>${grads}</defs>` +
+        `<g class="wires-in" style="--d:240ms">${group('in')}</g><g class="wires-out" style="--d:1000ms">${group('out')}</g>` +
+        nodes + dots + `</svg>`;
       const svg = $('svg', host);
       packets = wires.map((w, i) => {
         const path = $('#hw' + i, svg);
-        return { path, len: path.getTotalLength(), c: $(`circle[data-w="${i}"]`, svg), off: (i % 4) * 0.25 + (i >= 4 ? 0.12 : 0), speed: 2600 + (i % 3) * 400 };
+        return { path, len: path.getTotalLength(), dots: $$(`circle[data-w="${i}"]`, svg), off: (i % 4) * 0.25 + (i >= 4 ? 0.12 : 0), speed: 2600 + (i % 3) * 400 };
       });
-      if (reduced) packets.forEach(p => { const pt = p.path.getPointAtLength(p.len * 0.6); p.c.setAttribute('cx', pt.x); p.c.setAttribute('cy', pt.y); p.c.setAttribute('opacity', 1); });
+      if (reduced) packets.forEach(p => { const pt = p.path.getPointAtLength(p.len * 0.6), c = p.dots[0]; c.setAttribute('cx', pt.x); c.setAttribute('cy', pt.y); c.setAttribute('opacity', 1); });
     }
     function loop(now) {
-      packets.forEach(p => {
-        const k = ((now / p.speed) + p.off) % 1;
-        const pt = p.path.getPointAtLength(easeInOut(k) * p.len);
-        p.c.setAttribute('cx', pt.x.toFixed(1)); p.c.setAttribute('cy', pt.y.toFixed(1));
-        p.c.setAttribute('opacity', (k < 0.08 ? k / 0.08 : k > 0.92 ? (1 - k) / 0.08 : 1).toFixed(2));
-      });
+      packets.forEach(p => p.dots.forEach((c, k) => {
+        const kk = (((now - k * 34) / p.speed + p.off) % 1 + 1) % 1;
+        const pt = p.path.getPointAtLength(easeInOut(kk) * p.len);
+        const fade = kk < 0.08 ? kk / 0.08 : kk > 0.92 ? (1 - kk) / 0.08 : 1;
+        c.setAttribute('cx', pt.x.toFixed(1)); c.setAttribute('cy', pt.y.toFixed(1));
+        c.setAttribute('opacity', (fade * (1 - k / TAIL) * (k ? 0.7 : 1)).toFixed(2));
+      }));
       if (visible) raf = requestAnimationFrame(loop);
     }
     build();
     matchMedia('(max-width: 767px)').addEventListener('change', build);
-    if (reduced) return;
-    new IntersectionObserver(([e]) => { visible = e.isIntersecting; cancelAnimationFrame(raf); if (visible) raf = requestAnimationFrame(loop); }).observe(host);
+    if (reduced) { host.classList.add('in'); return; }
+    new IntersectionObserver(([e], o) => { if (e.isIntersecting) { host.classList.add('in'); o.disconnect(); } }, { threshold: 0.3 }).observe(host);
+    const run = on => { visible = on; cancelAnimationFrame(raf); if (visible) raf = requestAnimationFrame(loop); };
+    let onScreen = false;
+    new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; run(onScreen && !document.hidden); }).observe(host);
+    document.addEventListener('visibilitychange', () => run(onScreen && !document.hidden));
   })();
+
+  /* ---------------- light fields: hero beams + closing horizon ----------------
+     Canvas light in signal aqua, read from --fx-ray / --fx-ray-hi so they
+     follow the theme. Ambient loop on a 7s-ish cycle, ~30fps, only while on
+     screen and the tab is visible. Reduced motion draws one still frame. */
+  (function fields() {
+    const cvs = $$('canvas[data-fx]');
+    if (!cvs.length) return;
+    const DPR = Math.min(devicePixelRatio || 1, 1.5);
+    const TAU = Math.PI * 2;
+    const hexA = (hex, a) => {
+      const h = hex.trim().replace('#', ''), f = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+      const n = parseInt(f, 16);
+      return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+    };
+
+    const fields = cvs.map(canvas => {
+      const ctx = canvas.getContext('2d');
+      const kind = canvas.dataset.fx;
+      const f = { canvas, ctx, kind, w: 0, h: 0, col: {}, mask: null, on: false };
+
+      f.colours = () => {
+        const cs = getComputedStyle(canvas);
+        f.col = { ray: cs.getPropertyValue('--fx-ray') || '#19e3c1', hi: cs.getPropertyValue('--fx-ray-hi') || '#7df0dc', k: parseFloat(cs.getPropertyValue('--fx-strength')) || 1,
+                  light: document.documentElement.getAttribute('data-mode') === 'light' };
+      };
+      f.size = () => {
+        const r = canvas.getBoundingClientRect();
+        f.w = Math.max(1, Math.round(r.width)); f.h = Math.max(1, Math.round(r.height));
+        canvas.width = Math.round(f.w * DPR); canvas.height = Math.round(f.h * DPR);
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        if (kind === 'beams') {
+          // mask = the headline area, cut out after drawing so the copy stays calm
+          const m = document.createElement('canvas'); m.width = canvas.width; m.height = canvas.height;
+          const mc = m.getContext('2d'); mc.setTransform(DPR, 0, 0, DPR, 0, 0);
+          const cx = f.w / 2, rx = Math.min(f.w * 0.3, 520), ry = f.h * 0.42;
+          mc.save(); mc.translate(cx, f.h * 0.33); mc.scale(rx / ry, 1);
+          const g = mc.createRadialGradient(0, 0, 0, 0, 0, ry);
+          g.addColorStop(0, 'rgba(0,0,0,.92)'); g.addColorStop(0.45, 'rgba(0,0,0,.85)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+          mc.fillStyle = g; mc.fillRect(-ry, -ry, ry * 2, ry * 2); mc.restore();
+          f.mask = m;
+        }
+      };
+      f.draw = t => {
+        const { w, h, col } = f;
+        ctx.clearRect(0, 0, w, h);
+        ctx.globalCompositeOperation = col.light ? 'source-over' : 'lighter';
+        if (kind === 'beams') drawBeams(f, t); else drawHorizon(f, t);
+        ctx.globalCompositeOperation = 'source-over';
+      };
+      return f;
+    });
+
+    /* Converging beams: light streaks in from both sides toward a vanishing
+       point behind the call to action, over layered diamonds that drift
+       outward like a tunnel. Beams draw in once on load (~1.6s), then
+       pulses keep travelling inward. */
+    const rand = (i, k) => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };
+    function drawBeams(f, t) {
+      const { ctx, w, h, col } = f;
+      const small = w < 768;
+      const vx = w / 2, vy = h * (small ? 0.6 : 0.57);
+      const k = col.k;
+
+      // side blooms where the beams are brightest
+      [-1, 1].forEach(s => {
+        const bx = s < 0 ? w * 0.04 : w * 0.96, by = vy - h * 0.06;
+        ctx.save(); ctx.translate(bx, by); ctx.scale(1, 0.55);
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.32);
+        g.addColorStop(0, hexA(col.ray, 0.34 * k)); g.addColorStop(1, hexA(col.ray, 0));
+        ctx.fillStyle = g; ctx.fillRect(-w * 0.32, -w * 0.32, w * 0.64, w * 0.64); ctx.restore();
+      });
+
+      // layered diamonds around the vanishing point, drifting outward
+      const D = 6;
+      for (let i = 0; i < D; i++) {
+        const p = reduced ? (i + 0.5) / D : ((i + t * 0.07) % D) / D;  // 0 → 1 as it grows
+        const r = (0.08 + p * 0.95) * Math.max(w * 0.5, h * 0.9);
+        const a = Math.sin(p * Math.PI) * 0.16 * k;
+        ctx.save(); ctx.translate(vx, vy); ctx.scale(1.25, 0.72); ctx.rotate(Math.PI / 4);
+        const g = ctx.createLinearGradient(-r, 0, r, 0);
+        g.addColorStop(0, hexA(col.ray, a * 0.55)); g.addColorStop(0.5, hexA(col.ray, 0)); g.addColorStop(1, hexA(col.ray, a * 0.55));
+        ctx.fillStyle = g; ctx.fillRect(-r / Math.SQRT2, -r / Math.SQRT2, r * Math.SQRT2, r * Math.SQRT2);
+        ctx.strokeStyle = hexA(col.hi, a * 0.6); ctx.lineWidth = 1;
+        ctx.strokeRect(-r / Math.SQRT2, -r / Math.SQRT2, r * Math.SQRT2, r * Math.SQRT2);
+        ctx.restore();
+      }
+
+      // the beams
+      const N = small ? 14 : 26;
+      ctx.lineCap = 'round';
+      for (let s = -1; s <= 1; s += 2) {
+        for (let i = 0; i < N; i++) {
+          const j = i + (s > 0 ? 100 : 0);
+          const ex = s < 0 ? -20 : w + 20;
+          const ey = vy + (i / (N - 1) - 0.5) * h * 1.25 + (rand(j, 1) - 0.5) * h * 0.08;
+          const stop = 0.5 + rand(j, 2) * 0.32;                 // beams fade before the centre
+          const ix = ex + (vx - ex) * stop, iy = ey + (vy - ey) * stop;
+          const weight = Math.exp(-Math.pow((ey - vy) / (h * 0.42), 2));
+          const hero = rand(j, 3) > 0.78;                        // a few bright, thick beams
+          const intro = reduced ? 1 : easeOut(clamp((t - 0.15 - rand(j, 4) * 0.6) / 1.1));
+          if (intro <= 0) continue;
+          const tx = ex + (ix - ex) * intro, ty = ey + (iy - ey) * intro;
+          const base = (0.12 + 0.6 * weight) * (hero ? 1.5 : 1) * k;
+          const g = ctx.createLinearGradient(ex, ey, ix, iy);
+          g.addColorStop(0, hexA(col.ray, 0)); g.addColorStop(0.18, hexA(col.hi, clamp(base))); g.addColorStop(1, hexA(col.ray, 0));
+          ctx.strokeStyle = g;
+          if (hero) { ctx.globalAlpha = 0.25; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(tx, ty); ctx.stroke(); }
+          ctx.globalAlpha = 1; ctx.lineWidth = hero ? 2.2 : 1;
+          ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(tx, ty); ctx.stroke();
+          // a pulse of light travelling inward along the beam
+          if (intro >= 1 && weight > 0.15) {
+            const sp = 0.16 + rand(j, 5) * 0.14;
+            const q = reduced ? 0.45 : (t * sp + rand(j, 6)) % 1;
+            const q0 = Math.max(0, q - 0.14);
+            const ax = ex + (ix - ex) * q0, ay = ey + (iy - ey) * q0, bx = ex + (ix - ex) * q, by = ey + (iy - ey) * q;
+            const pg = ctx.createLinearGradient(ax, ay, bx, by);
+            const pa = clamp(Math.sin(q * Math.PI) * weight * 0.9 * k);
+            pg.addColorStop(0, hexA(col.hi, 0)); pg.addColorStop(1, hexA(col.hi, pa));
+            ctx.strokeStyle = pg; ctx.lineWidth = hero ? 3 : 1.6;
+            ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+      // keep the headline area calm
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.drawImage(f.mask, 0, 0, w, h);
+    }
+
+    function drawHorizon(f, t) {
+      const { ctx, w, h, col } = f;
+      const step = w < 768 ? 7 : 6, bw = step * 0.55, base = h * 0.78, cx = w / 2;
+      for (let x = step / 2; x < w; x += step) {
+        const u = (x - cx) / (w / 2);                            // -1 … 1
+        const bell = Math.exp(-u * u * 2.2);
+        const wave = 0.62 + 0.38 * Math.sin(x * 0.034 - t * 0.9 + Math.sin(x * 0.007 + t * 0.35) * 2);
+        const bh = h * 0.6 * (0.16 + 0.82 * bell) * wave;
+        const g = ctx.createLinearGradient(0, base - bh, 0, base);
+        g.addColorStop(0, hexA(col.ray, 0)); g.addColorStop(0.7, hexA(col.ray, 0.35 * col.k)); g.addColorStop(1, hexA(col.hi, 0.95 * col.k));
+        ctx.globalAlpha = 0.35 + 0.65 * bell;
+        ctx.fillStyle = g; ctx.fillRect(x - bw / 2, base - bh, bw, bh);
+        // short reflection under the horizon line
+        const rg = ctx.createLinearGradient(0, base, 0, base + bh * 0.22);
+        rg.addColorStop(0, hexA(col.hi, 0.5 * col.k)); rg.addColorStop(1, hexA(col.ray, 0));
+        ctx.fillStyle = rg; ctx.fillRect(x - bw / 2, base, bw, bh * 0.22);
+      }
+      ctx.globalAlpha = 1;
+      // the horizon itself: a bright line and an elliptical bloom
+      ctx.save(); ctx.translate(cx, base); ctx.scale(1, 0.16);
+      const bloom = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.5);
+      bloom.addColorStop(0, hexA(col.hi, 0.55 * col.k)); bloom.addColorStop(1, hexA(col.ray, 0));
+      ctx.fillStyle = bloom; ctx.fillRect(-w / 2, -w / 2, w, w); ctx.restore();
+      const line = ctx.createLinearGradient(0, 0, w, 0);
+      line.addColorStop(0, hexA(col.hi, 0)); line.addColorStop(0.5, hexA(col.hi, 0.9 * col.k)); line.addColorStop(1, hexA(col.hi, 0));
+      ctx.fillStyle = line; ctx.fillRect(0, base - 0.5, w, 1);
+    }
+
+    fields.forEach(f => { f.colours(); f.size(); f.draw(reduced ? 2 : 0); });
+    requestAnimationFrame(() => fields.forEach(f => f.canvas.classList.add('is-on')));
+
+    let ro;
+    const redrawAll = () => fields.forEach(f => { f.colours(); f.size(); f.draw(f.t ?? (reduced ? 2 : 0)); });
+    if ('ResizeObserver' in window) { ro = new ResizeObserver(redrawAll); fields.forEach(f => ro.observe(f.canvas)); }
+    new MutationObserver(() => fields.forEach(f => { f.colours(); f.draw(f.t ?? (reduced ? 2 : 0)); })).observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode', 'data-theme'] });
+    (document.fonts?.ready || Promise.resolve()).then(redrawAll);
+    if (reduced) return;
+
+    let raf = 0, last = 0;
+    const t0 = performance.now();
+    function tick(now) {
+      raf = 0;
+      if (now - last >= 33) { // ~30fps is plenty for a slow ambient field
+        last = now;
+        const t = (now - t0) / 1000 * (TAU / 7) * 1.1; // one full drift every ~7s
+        fields.forEach(f => { if (f.on) { f.t = t; f.draw(t); } });
+      }
+      schedule();
+    }
+    function schedule() { if (!raf && !document.hidden && fields.some(f => f.on)) raf = requestAnimationFrame(tick); }
+    const io = new IntersectionObserver(es => { es.forEach(e => { const f = fields.find(x => x.canvas === e.target); if (f) f.on = e.isIntersecting; }); schedule(); });
+    fields.forEach(f => io.observe(f.canvas));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else schedule(); });
+  })();
+
+  /* ---------------- staggered groups: children reveal 60ms apart (max 8) ---------------- */
+  $$('[data-stagger]').forEach(g => [...g.children].forEach((c, i) => {
+    c.classList.add('rv'); c.style.setProperty('--d', Math.min(i, 7) * 60 + 'ms'); rvIO.observe(c);
+  }));
 
   /* ---------------- layer tabs ---------------- */
   (function layers() {
