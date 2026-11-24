@@ -157,6 +157,15 @@
   addEventListener('resize', () => { if (current) place(current); });
   if (pinned) (document.fonts?.ready || Promise.resolve()).then(() => open(params.get('open')));
 
+  /* ---------------- mark the section the current page belongs to ---------------- */
+  (function current() {
+    const file = location.pathname.split('/').pop() || 'index.html';
+    const group = /^(service|claude-code)/.test(file) ? 'services' : /^case/.test(file) ? 'results' : /^pricing/.test(file) ? 'pricing'
+      : /^(about|uk-ireland|gdpr|tools|playbook|blog|post|newsletter|careers|contact)/.test(file) ? 'about' : null;
+    if (group) triggers[order.indexOf(group)].classList.add('is-here');
+    $$('.foot-col a, .msheet-body a').forEach(a => { if (a.getAttribute('href') === file) a.setAttribute('aria-current', 'page'); });
+  })();
+
   /* ---------------- mobile sheet ---------------- */
   const sheet = $('#msheet');
   const burger = $('.nav .burger');
@@ -183,8 +192,10 @@
   /* =================================================================
      HERO STORY: one signal becomes one meeting. A single clock in "story
      seconds" (the times printed on the timeline) drives everything, so any
-     frame can be rendered. Plays once when seen, then rests with a quiet
-     comet on the wires. Replay restarts it. ?story=end and ?story=<s> pin.
+     frame can be rendered. The scroll drives that clock: the stage holds in
+     view on desktop and scrubs as it passes on smaller screens, forwards and
+     back. It rests with a quiet comet on the wires; replay plays it timed.
+     ?story=end and ?story=<s> pin.
      ================================================================= */
   (function story() {
     const root = $('[data-story]');
@@ -284,50 +295,69 @@
       set(crm, 'is-locked', t >= END, () => burst(crm));
     }
 
-    let raf = 0, t = 0, last = 0, started = false, seen = false, rest = 0;
+    const track = $('[data-story-scroll]');
+    const desk = matchMedia('(min-width: 1024px)');
+    let raf = 0, t = 0, target = 0, last = 0, seen = false, rest = 0, timed = false;
+
+    // where the scroll says the story should be, in story seconds
+    function readScroll() {
+      const r = track.getBoundingClientRect(), vh = innerHeight;
+      let p;
+      if (desk.matches) {
+        const pin = parseFloat(getComputedStyle(root).top) || 0, run = r.height - root.offsetHeight;
+        p = (pin + vh * 0.22 - r.top) / (run + vh * 0.22 - vh * 0.16); // starts as it settles, holds the last frame a moment
+      } else {
+        const sr = stage.getBoundingClientRect();
+        p = (vh * 0.74 - sr.top) / (sr.height * 0.86);
+      }
+      target = END * clamp(p);
+    }
     function tick(now) {
       raf = 0;
       const dt = Math.min(50, now - last); last = now;
-      if (t < END) {
-        t = Math.min(END, t + dt / 1000 * SPEED);
-        render(t, now);
-        if (t >= END) { rest = 0; replay.classList.add('on'); }
-      } else {
+      const was = t;
+      if (timed) { t = Math.min(END, t + dt / 1000 * SPEED); if (t >= END) timed = false; }
+      else {
+        t += (target - t) * (1 - Math.exp(-dt / 90)); // follow the scroll, smoothing out wheel steps
+        if (Math.abs(target - t) < 0.004) t = target;
+      }
+      // redraw while it moves, and while the call is talking
+      if (t !== was || (t > 1.25 && t < END)) render(t, now);
+      replay.classList.toggle('on', t >= END);
+      if (t >= END) {
         // at rest: every 7 seconds one comet crosses both wires
         rest += dt;
         const c = (rest % 7000) / 1000;
         comet(0, seg(c, 4.6, 5.5), 0.8); comet(1, seg(c, 5.6, 6.5), 0.8);
-      }
+      } else rest = 0;
       run();
     }
-    function run() { if (!raf && started && seen && !document.hidden) raf = requestAnimationFrame(tick); }
-    function play() {
-      layout(); width = bar.clientWidth; t = 0; started = true; last = performance.now();
-      replay.classList.remove('on'); stage.classList.add('is-live');
-      render(0); run();
-    }
-    const refresh = () => { layout(); width = bar.clientWidth; render(t); };
+    function run() { if (!raf && seen && !document.hidden) raf = requestAnimationFrame(tick); }
+    function play() { timed = true; t = 0; last = performance.now(); render(0); run(); }
+    const refresh = () => { root.style.setProperty('--stage-h', root.offsetHeight + 'px'); layout(); width = bar.clientWidth; if (!timed && !pin && !reduced) readScroll(); render(t); };
+    const pin = params.get('story');
     replay.addEventListener('click', play);
     addEventListener('resize', refresh);
-    const pin = params.get('story');
     if (reduced || pin) {
+      track.classList.add('is-still');
       t = pin && pin !== 'end' ? clamp(parseFloat(pin) || 0, 0, END) : END;
       stage.classList.add('is-live'); replay.classList.toggle('on', t >= END && !reduced);
       (document.fonts?.ready || Promise.resolve()).then(refresh);
       return;
     }
     (document.fonts?.ready || Promise.resolve()).then(refresh);
+    const onScroll = () => { timed = false; readScroll(); };
     new IntersectionObserver(([e]) => {
       seen = e.isIntersecting; last = performance.now();
-      if (!seen) { cancelAnimationFrame(raf); raf = 0; return; }
-      run();
+      if (!seen) { removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); raf = 0; return; }
+      addEventListener('scroll', onScroll, { passive: true });
+      readScroll(); stage.classList.add('is-live'); run();
     }).observe(stage);
-    const start = new IntersectionObserver(([e]) => { if (e.isIntersecting) { start.disconnect(); setTimeout(play, 250); } }, { threshold: 0.35 });
-    start.observe(stage);
     document.addEventListener('visibilitychange', () => { last = performance.now(); if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else run(); });
   })();
 
-  /* ---------------- booking forms: rest → loading → booked ---------------- */
+  /* ---------------- booking forms: check the email, then open the calendar ---------------- */
+  const BOOKING_URL = 'https://calendly.com/luke-nextgenoutreach/30min';
   const freeMail = /@(gmail|googlemail|yahoo|hotmail|outlook|live|icloud|me|aol|proton(mail)?|gmx)\./i;
   $$('[data-book-form]').forEach(form => {
     const input = form.querySelector('input');
@@ -340,13 +370,12 @@
       err.textContent = '';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { err.textContent = 'Enter your work email to see open times.'; input.focus(); return; }
       if (freeMail.test(v)) { err.textContent = 'Please use your work email so we can bring accounts from your market.'; input.focus(); return; }
-      btn.setAttribute('aria-busy', 'true');
-      lbl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><span class="spin"></span>Opening calendar</span>';
-      setTimeout(() => {
-        btn.removeAttribute('aria-busy'); btn.classList.add('is-booked'); lbl.textContent = 'Call booked';
-        toast('Prototype: the white-labelled scheduler opens here');
-        setTimeout(() => { btn.classList.remove('is-booked'); lbl.textContent = 'Book a call'; }, 2400);
-      }, 1100);
+      // the calendar opens in a new tab; nothing is booked until a time is picked there
+      const rest = lbl.textContent;
+      window.open(BOOKING_URL, '_blank', 'noopener');
+      btn.classList.add('is-booked'); lbl.textContent = 'Calendar opened';
+      toast('Pick a time in the calendar that just opened');
+      setTimeout(() => { btn.classList.remove('is-booked'); lbl.textContent = rest; }, 3200);
     });
   });
 
@@ -707,8 +736,10 @@
           // mask = the headline area, cut out after drawing so the copy stays calm
           const m = document.createElement('canvas'); m.width = canvas.width; m.height = canvas.height;
           const mc = m.getContext('2d'); mc.setTransform(DPR, 0, 0, DPR, 0, 0);
-          const cx = f.w / 2, rx = Math.min(f.w * 0.3, 520), ry = f.h * 0.42;
-          mc.save(); mc.translate(cx, f.h * 0.33); mc.scale(rx / ry, 1);
+          f.aim = f.w >= 1024 && parseFloat(canvas.dataset.vx) || 0.5; // subpage heroes aim right, so the copy sits left
+          const side = f.aim !== 0.5;
+          const cx = side ? f.w * 0.27 : f.w / 2, rx = side ? f.w * 0.36 : Math.min(f.w * 0.3, 520), ry = side ? f.h * 0.72 : f.h * 0.42;
+          mc.save(); mc.translate(cx, f.h * (side ? 0.5 : 0.33)); mc.scale(rx / ry, 1);
           const g = mc.createRadialGradient(0, 0, 0, 0, 0, ry);
           g.addColorStop(0, 'rgba(0,0,0,.92)'); g.addColorStop(0.45, 'rgba(0,0,0,.85)'); g.addColorStop(1, 'rgba(0,0,0,0)');
           mc.fillStyle = g; mc.fillRect(-ry, -ry, ry * 2, ry * 2); mc.restore();
@@ -733,7 +764,7 @@
     function drawBeams(f, t) {
       const { ctx, w, h, col } = f;
       const small = w < 768;
-      const vx = w / 2, vy = h * (small ? 0.6 : 0.57);
+      const vx = w * (f.aim || 0.5), vy = h * (f.aim !== 0.5 ? 0.5 : small ? 0.6 : 0.57);
       const k = col.k;
 
       // side blooms where the beams are brightest
@@ -982,6 +1013,23 @@
     }));
   })();
 
+  /* ---------------- tool directory page: category filter and search ---------------- */
+  (function directory() {
+    const grid = $('[data-directory]');
+    if (!grid) return;
+    const cards = $$('.tool-card', grid), chips = $$('[data-dir-cat]'), input = $('[data-dir-search]'), out = $('[data-dir-count]');
+    let cat = 'all';
+    function apply() {
+      const q = input.value.trim().toLowerCase();
+      let n = 0;
+      cards.forEach(c => { const on = (cat === 'all' || c.dataset.c === cat) && (!q || c.textContent.toLowerCase().includes(q)); c.hidden = !on; if (on) n++; });
+      out.textContent = `${n} ${n === 1 ? 'tool' : 'tools'}`;
+    }
+    chips.forEach(b => b.addEventListener('click', () => { cat = b.dataset.dirCat; chips.forEach(o => o.setAttribute('aria-pressed', String(o === b))); apply(); }));
+    input.addEventListener('input', apply);
+    document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); input.focus(); input.select(); } });
+  })();
+
   /* ---------------- headings that reveal word by word ---------------- */
   (function split() {
     const heads = $$('.split');
@@ -1075,7 +1123,7 @@
       function paint() { const k = pos / TOTAL; bars.forEach((b, i) => b.classList.toggle('on', i / N < k)); tOut.textContent = fmt(pos); }
       function loop(now) { if (!playing) return; pos = Math.min(TOTAL, pos + (now - last) / 1000 * 12); last = now; paint(); if (pos >= TOTAL) { playing = false; setIcon(); return; } raf = requestAnimationFrame(loop); }
       const setIcon = () => { $('use', btn).setAttribute('href', playing ? '#i-pause' : '#i-play'); btn.setAttribute('aria-label', playing ? 'Pause the call recording' : 'Play the call recording'); };
-      btn.addEventListener('click', () => { playing = !playing; if (pos >= TOTAL) pos = 0; last = performance.now(); setIcon(); if (playing) raf = requestAnimationFrame(loop); else toast('Prototype: the real recording plays here, with consent'); });
+      btn.addEventListener('click', () => { playing = !playing; if (pos >= TOTAL) pos = 0; last = performance.now(); setIcon(); if (playing) raf = requestAnimationFrame(loop); else toast('Sample waveform. Real recordings are shared on a call, with consent'); });
       paint();
     });
   })();
