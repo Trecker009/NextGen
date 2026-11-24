@@ -1560,3 +1560,16 @@ a.lcard:active { transform: scale(.985); }
 .cmp .us .y, .cmp .y { vertical-align: top; }
 .err-code { font-family: var(--mono); font-weight: 500; font-size: 120px; line-height: 1; letter-spacing: -0.05em; color: var(--aqua); }
 @media (max-width: 1023px) { .page-hero > .fx-page.is-on { opacity: .5; } } /* copy sits over the beams here, so they step back */
+@media (max-width: 374px) { .nav { gap: var(--space-2); } .nav .logo { font-size: 17px; gap: 8px; } .nav-actions { gap: var(--space-2); } .nav .theme-toggle.icon button { width: 26px; height: 28px; } }
+
+/* why outbound stalls: everything on the centre line on phones (the comparison table scrolls, so its cells stay left) */
+@media (max-width: 767px) {
+  #why .sec-head { justify-items: center; text-align: center; }
+  #why .pa-row { justify-items: center; text-align: center; gap: var(--space-4); padding: var(--space-7) 0; }
+  #why .pain-col { flex-direction: column; gap: var(--space-3); }
+  #why .pa-row .ans { justify-items: center; }
+  #why .pa-row .ans h3 { justify-content: center; }
+  #why .metric-tile { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; row-gap: var(--space-2); padding: var(--space-5) var(--space-4); }
+  #why .metric-tile .st-ico { grid-row: auto; margin-bottom: var(--space-1); }
+  #why .metric-tile .metric-s { justify-self: center; }
+}

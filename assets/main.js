@@ -396,11 +396,12 @@
     let raf = 0;
     function frame() {
       raf = 0;
+      if (!mq.matches) return; // phones fire resize when the address bar collapses; the dial is desktop only
       const r = wrap.getBoundingClientRect();
       const span = wrap.offsetHeight - innerHeight * 0.72;
       apply(clamp((innerHeight * 0.16 - r.top) / span));
     }
-    window.__ngDial = p => apply(clamp(p)); // design-export hook
+    window.__ngDial = p => { if (mq.matches) apply(clamp(p)); }; // design-export hook
     function apply(p) {
       const raw = p * (rows.length - 1), base = Math.floor(raw), frac = raw - base;
       const eased = Math.min(rows.length - 1, base + smooth(clamp((frac - 0.3) / 0.4)));
@@ -419,7 +420,7 @@
       const on = mq.matches;
       wrap.classList.toggle('dial-on', on);
       if (on) { rows.forEach(r => r.classList.add('in')); addEventListener('scroll', req, { passive: true }); frame(); }
-      else { removeEventListener('scroll', req); rows.forEach(r => { r.style.transform = ''; r.style.opacity = ''; r.classList.remove('is-on'); }); }
+      else { removeEventListener('scroll', req); cancelAnimationFrame(raf); raf = 0; rows.forEach(r => { r.style.transform = ''; r.style.opacity = ''; r.classList.remove('is-on'); }); }
     }
     mq.addEventListener('change', setMode);
     addEventListener('resize', req);
