@@ -551,20 +551,35 @@ section { position: relative; }
 .pa-row .ans p { color: var(--ink-muted); max-width: 56ch; }
 .dial-rail { display: none; }
 @media (min-width: 1024px) {
-  .pa-scroll.dial-on { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; height: 240vh; }
-  .dial-on > .pa, .dial-on > .dial-rail { grid-area: 1 / 1; } /* one shared sticky frame, so the rail leaves with the rows */
-  .dial-on .pa { position: sticky; top: calc(var(--header-h) + 8vh); height: 72vh; border-top: 0; perspective: 1400px; }
-  .dial-on .pa-row { position: absolute; left: 80px; right: 0; top: 50%; border-bottom: 0; padding: 0; will-change: transform, opacity; transform-origin: 50% 50% -200px; }
+  /* The section locks: heading and dial pin together as one screen under the header, centred.
+     The ::after spacer is the scroll distance it plays over. Inside the 420px frame the active
+     row sits on --pa-line, near the top, so the next row peeks in faded underneath it. Once the
+     third row lands, the metrics rise into the space the upcoming rows used (main.js scrubs it). */
+  .pa-scroll.dial-on { position: relative; }
+  .pa-scroll.dial-on::after { content: ""; display: block; height: 210vh; }
+  .dial-on .pa-sticky { position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h)); display: flex; flex-direction: column; justify-content: center; padding: var(--space-7) 0; }
+  .dial-on .sec-head { margin-bottom: var(--space-6); flex: none; }
+  .dial-on .pa-frame { --pa-line: 80px; position: relative; flex: none; height: 420px; }
+  .dial-on .pa-stats { position: absolute; left: 0; right: 0; top: calc(var(--pa-line) + 168px); margin: 0; pointer-events: none; } /* clears row 3's three-line description by ~60px */
+  .dial-on .pa-stats.is-on { pointer-events: auto; }
+  .dial-on .pa-stats .metric-tile.rv { transition: none; will-change: transform, opacity; }
+  /* metrics to comparison stays 96px: 48px stage padding + 48px margin, minus the stage's spare room (--pa-slack, from main.js) */
+  .pa-scroll.dial-on + .cmp-wrap { margin-top: calc(var(--space-7) - var(--pa-slack, 0px)); }
+  /* rows leave through a short fade at the top and arrive through a long one at the bottom */
+  .dial-on .pa { position: absolute; inset: 0; border-top: 0; perspective: 1400px;
+    -webkit-mask-image: linear-gradient(transparent, #000 40px, #000 calc(100% - 110px), transparent); mask-image: linear-gradient(transparent, #000 40px, #000 calc(100% - 110px), transparent); }
+  .dial-on .pa-row { position: absolute; left: 104px; right: 0; top: var(--pa-line); border-bottom: 0; padding: 0; will-change: transform, opacity; transform-origin: 50% 50% -200px; }
   .dial-on .pa-row.rv { transition: none; }
   /* the description hangs below the heading, so the heading always lines up with the struck-out pain */
   .dial-on .pa-row .ans { position: relative; }
   .dial-on .pa-row .ans p { position: absolute; top: 100%; left: 0; margin-top: var(--space-2); transition: opacity var(--dur-reveal); }
   .dial-on .pa-row:not(.is-on) .ans p { opacity: 0; }
   .dial-on .pa-row.is-on .to { color: var(--ink); border-color: var(--ink); }
-  .dial-on > .dial-rail { display: block; position: sticky; top: calc(var(--header-h) + 8vh); height: 72vh; z-index: 2; pointer-events: none; }
-  .dial-rail .count { position: absolute; left: 0; top: calc(36vh - 102px); font-family: var(--mono); font-size: 13px; color: var(--ink-muted); white-space: nowrap; }
+  /* the rail lives in the same frame as the rows: the counter sits on the active row's line, the dot tracks progress */
+  .dial-on .dial-rail { display: block; position: absolute; inset: 0 auto 0 0; width: 96px; z-index: 2; pointer-events: none; }
+  .dial-rail .count { position: absolute; left: 20px; top: var(--pa-line); transform: translateY(-50%); font-family: var(--mono); font-size: 13px; line-height: 16px; color: var(--ink-muted); white-space: nowrap; }
   .dial-rail .count b { color: var(--ink); font-weight: 500; }
-  .dial-rail .track { position: absolute; left: 4px; top: calc(36vh - 70px); width: 1px; height: 140px; background: var(--line); }
+  .dial-rail .track { position: absolute; left: 4px; top: calc(var(--pa-line) - 70px); width: 1px; height: 140px; background: var(--line); }
   .dial-rail .track i { position: absolute; left: -3px; top: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
 }
 .pa-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gutter); margin-top: var(--space-7); }
@@ -601,8 +616,6 @@ section { position: relative; }
   .fn-scroll.is-scrub .fn-sticky { position: sticky; top: var(--header-h); min-height: calc(100vh - var(--header-h)); display: flex; flex-direction: column; justify-content: center; padding: var(--space-5) 0; }
   .fn-scroll.is-scrub .sec-head { margin-bottom: var(--space-5); }
 }
-.fn-counters { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gutter); margin-bottom: var(--space-4); }
-
 .fn-stage { position: relative; display: grid; grid-template-columns: 1fr 1fr 1.14fr .98fr; gap: 40px; padding: var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--line); background: var(--surface); box-shadow: var(--depth-mockup); }
 .fn-zone { position: relative; display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
 .fn-zone > .chrome { display: flex; justify-content: space-between; gap: 8px; margin-bottom: var(--space-1); }
@@ -623,7 +636,6 @@ section { position: relative; }
   .fn-replay { display: inline-flex; }
 }
 @media (max-width: 767px) {
-  .fn-counters { grid-template-columns: 1fr 1fr; row-gap: var(--space-4); }
   .fn-stage { grid-template-columns: 1fr; padding: var(--space-4); }
   .fn-cloud { min-height: 170px; }
   .steps { grid-template-columns: 1fr; }
@@ -653,7 +665,6 @@ section { position: relative; }
 /* ---------- package ---------- */
 .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gutter); }
 .tier-card { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-5); border-radius: var(--radius-md); background: var(--surface); border: 1px solid var(--line); transition: transform var(--dur-reveal) var(--ease-out), border-color var(--dur-hover); }
-.tier-card.feat { border-color: var(--line-strong); }
 @media (hover: hover) { .tier-card:hover { transform: translateY(-2px); border-color: var(--line-strong); } }
 .tier-card .top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
 .tier-card .n { font-family: var(--mono); font-size: 13px; color: var(--ink-muted); }
@@ -668,6 +679,21 @@ section { position: relative; }
 .tier-card .stack i.on { background: var(--ink-muted); }
 .tier-card .btn { margin-top: auto; align-self: flex-start; }
 @media (max-width: 1023px) { .tiers { grid-template-columns: 1fr; } }
+
+/* The recommended tier: same surface as its neighbours, picked out by the aqua "Most picked" chip, the aqua primary CTA
+   and a soft aqua glow that drips from under the card. The drip is two shadows pulled in at the sides (negative spread)
+   and pushed down, so the colour only shows below the bottom edge. The transition list repeats the reveal's (.rv). */
+.tier-card.feat { border-color: color-mix(in srgb, var(--border-active) 55%, var(--line));
+  box-shadow: 0 18px 28px -18px var(--aqua-glow), 0 40px 70px -36px var(--aqua-glow);
+  transition: opacity var(--dur-reveal-in) var(--ease-reveal), transform var(--dur-reveal-in) var(--ease-reveal), filter var(--dur-reveal-in) var(--ease-reveal), border-color var(--dur-hover), box-shadow var(--dur-hover) ease; }
+.tier-card.feat .chip.strong { background: var(--aqua-soft); border-color: var(--border-active); color: var(--on-aqua-soft); font-weight: 500; }
+@media (hover: hover) { .tier-card.feat:hover { border-color: var(--border-active); box-shadow: 0 22px 32px -18px var(--aqua-glow), 0 50px 90px -36px var(--aqua-glow); } }
+/* the top tier (Full stack) gets the same drip as the recommended card, in a light off-blue */
+.tier-card.alt { --alt-glow: color-mix(in srgb, var(--blue) 32%, transparent); border-color: color-mix(in srgb, var(--blue) 18%, var(--line));
+  box-shadow: 0 18px 28px -18px var(--alt-glow), 0 40px 70px -36px var(--alt-glow);
+  transition: opacity var(--dur-reveal-in) var(--ease-reveal), transform var(--dur-reveal-in) var(--ease-reveal), filter var(--dur-reveal-in) var(--ease-reveal), border-color var(--dur-hover), box-shadow var(--dur-hover) ease; }
+.tier-card.alt .chip { border-color: color-mix(in srgb, var(--blue) 25%, var(--line)); }
+@media (hover: hover) { .tier-card.alt:hover { border-color: color-mix(in srgb, var(--blue) 40%, var(--line)); box-shadow: 0 22px 32px -18px var(--alt-glow), 0 50px 90px -36px var(--alt-glow); } }
 
 .layers { margin-top: var(--space-7); display: grid; grid-template-columns: 300px 1fr; gap: var(--space-4); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--line); }
 .layer-tabs { position: relative; display: grid; gap: 4px; align-content: start; }
@@ -1164,6 +1190,7 @@ html:not(.has-gsap) .marquee.is-running:hover .marquee-row, .marquee.is-running:
    the signal list, then travel the wires to a call and to a meeting.
    White (.hl) always marks what is happening right now.
    ====================================================================== */
+/* each card opens with its count: a progress line that fills during its phase, then the number, then the card's title */
 .fn-count { position: relative; display: grid; gap: 2px; padding-top: var(--space-3); border-top: 2px solid var(--line); }
 .fn-count .fill { position: absolute; left: 0; right: 0; top: -2px; height: 2px; background: var(--ink); transform: scaleX(0); transform-origin: left; }
 .fn-count.k3 .fill { background: var(--aqua); }
@@ -1231,7 +1258,7 @@ html:not(.has-gsap) .marquee.is-running:hover .marquee-row, .marquee.is-running:
 .fn-live .step:not(.on) p { opacity: .72; }
 @media (max-width: 1023px) { .fn-stage { grid-template-columns: 1fr 1fr; gap: 36px 28px; } .fn-wires { display: none; } }
 @media (max-width: 767px) { .fn-stage { grid-template-columns: 1fr; gap: 28px; } .fn-zone::before { inset: -8px; } .fn-count b { font-size: 28px; line-height: 32px; } }
-@media (min-width: 1024px) { .fn-scroll.is-scrub .sec-head { margin-bottom: var(--space-4); } }
+@media (min-width: 1024px) { .fn-scroll.is-scrub .sec-head { margin-bottom: var(--space-6); } } /* title to stage: the counts now live in the cards */
 @media (min-width: 1024px) and (max-width: 1239px) { .fn-stage { gap: 26px; } .fn-call .avatar { display: none; } }
 
 /* ---------- hub: logos in the nodes ---------- */
@@ -1433,9 +1460,8 @@ html:not(.has-gsap) .marquee.is-running:hover .marquee-row, .marquee.is-running:
 /* how it works on short laptops: the whole pinned scene still fits */
 @media (min-width: 1024px) and (max-height: 840px) {
   .fn-scroll.is-scrub .fn-sticky { padding: var(--space-2) 0; }
-  .fn-scroll.is-scrub .sec-head { gap: var(--space-1); margin-bottom: var(--space-3); }
+  .fn-scroll.is-scrub .sec-head { gap: var(--space-1); margin-bottom: var(--space-5); }
   .fn-scroll.is-scrub .sec-head .h2 { font-size: 32px; line-height: 38px; }
-  .fn-scroll.is-scrub .fn-counters { margin-bottom: var(--space-3); }
   .fn-scroll.is-scrub .fn-count { padding-top: var(--space-2); gap: 0; }
   .fn-scroll.is-scrub .fn-count b { font-size: 26px; line-height: 30px; }
   .fn-scroll.is-scrub .fn-stage { padding: 18px var(--space-5); }

@@ -27,6 +27,12 @@
     G.registerPlugin(ST); if (FLIP) G.registerPlugin(FLIP);
     ST.config({ ignoreMobileResize: true }); // a collapsing address bar is not a resize
     document.documentElement.classList.add('has-gsap');
+    // ScrollTrigger jumps the scroll position while it measures. With the page's smooth
+    // scrolling those jumps animate instead, and every scene measured mid-page lands off by
+    // the scroll distance, so smooth scrolling is switched off for the length of a refresh.
+    const html = document.documentElement;
+    ST.addEventListener('refreshInit', () => { html.style.scrollBehavior = 'auto'; });
+    ST.addEventListener('refresh', () => { html.style.scrollBehavior = ''; });
   }
   const DESK = '(min-width: 1024px)', SMALL = '(max-width: 1023px)';
   // run fn(progress) as the scroll moves between start and end
@@ -41,7 +47,6 @@
     return want => { if (want === on) return; on = want; if (G) G.ticker[want ? 'add' : 'remove'](step); };
   }
   if (!still) addEventListener('load', () => ST.refresh());
-
   /* ---------------- tool logos: files in assets/logos ---------------- */
   const PNG_LOGOS = ['clay', 'cognism', 'instantly', 'aircall', 'smartlead', 'orum'];
   const logoSrc = n => `assets/logos/${n}.${PNG_LOGOS.includes(n) ? 'png' : 'svg'}`;
@@ -455,7 +460,10 @@
     if (!wrap || still) return;
     const rows = $$('.pa-row', wrap);
     const nOut = $('[data-dial-n]', wrap), dot = $('[data-dial-dot]', wrap);
+    const stats = $('.pa-stats', wrap), tiles = $$('.metric-tile', stats);
     const smooth = x => x * x * (3 - 2 * x);
+    // rows: the active one is solid, the next one peeks in at 45%, the one after that at 12%
+    const fade = a => a <= 1 ? 1 - a * 0.55 : Math.max(0, 0.45 - (a - 1) * 0.33);
     function apply(p) {
       const raw = p * (rows.length - 1), base = Math.floor(raw), frac = raw - base;
       const eased = Math.min(rows.length - 1, base + smooth(clamp((frac - 0.3) / 0.4)));
@@ -463,21 +471,43 @@
       rows.forEach((row, i) => {
         const o = i - eased, a = Math.abs(o);
         row.style.transform = `translateY(calc(-50% + ${(o * 170).toFixed(2)}px)) rotateX(${(o * -32).toFixed(2)}deg) scale(${(1 - Math.min(a, 1.5) * 0.06).toFixed(4)})`;
-        row.style.opacity = Math.max(0, 1 - a * 0.7).toFixed(3);
+        row.style.opacity = fade(a).toFixed(3);
         row.classList.toggle('is-on', i === active);
       });
       const n = String(active + 1).padStart(2, '0');
       if (nOut.textContent !== n) nOut.textContent = n;
       dot.style.transform = `translateY(${((eased / (rows.length - 1)) * 133).toFixed(1)}px)`;
     }
-    window.__ngDial = p => { if (matchMedia(DESK).matches) apply(clamp(p)); }; // design-export hook
+    // metrics: once the third row has landed they rise into place one after another
+    function reveal(q) {
+      tiles.forEach((t, i) => {
+        const k = smooth(clamp(q * 1.5 - i * 0.25));
+        t.style.opacity = k.toFixed(3);
+        t.style.transform = `translateY(${((1 - k) * 40).toFixed(1)}px)`;
+      });
+      stats.classList.toggle('is-on', q > 0.5);
+    }
+    // one scroll timeline: hold row 1, play the rows, then bring the metrics in, then hold
+    const play = p => { apply(clamp((p - 0.05) / 0.65)); reveal(clamp((p - 0.74) / 0.18)); };
+    window.__ngDial = p => { if (matchMedia(DESK).matches) play(clamp(p)); }; // design-export hook
     // phones never enter here, so nothing can move the stacked rows
     G.matchMedia().add(DESK, () => {
       wrap.classList.add('dial-on');
       rows.forEach(r => r.classList.add('in'));
-      apply(0);
-      scrub(wrap, 'top 16%', 'bottom 88%', 0.5, apply);
-      return () => { wrap.classList.remove('dial-on'); rows.forEach(r => { r.style.transform = ''; r.style.opacity = ''; r.classList.remove('is-on'); }); dot.style.transform = ''; };
+      play(0);
+      // play exactly while the stage is pinned: from when it sticks until the spacer runs out
+      const stage = $('.pa-sticky', wrap), pinTop = () => parseFloat(getComputedStyle(stage).top) || 0;
+      // On tall screens the centred stage has spare room under the metrics; hand that to CSS
+      // so the comparison below keeps its usual distance once the stage lets go.
+      const host = wrap.parentElement; // the comparison is a sibling, so the value lives on the shared parent
+      const slack = () => host.style.setProperty('--pa-slack', Math.max(0, Math.round(stage.getBoundingClientRect().bottom - stats.getBoundingClientRect().bottom - parseFloat(getComputedStyle(stage).paddingBottom))) + 'px');
+      slack(); ST.addEventListener('refreshInit', slack);
+      scrub(wrap, () => `top ${pinTop()}px`, () => `bottom ${pinTop() + stage.offsetHeight}px`, 0.5, play);
+      return () => {
+        ST.removeEventListener('refreshInit', slack); host.style.removeProperty('--pa-slack'); wrap.classList.remove('dial-on');
+        rows.forEach(r => { r.style.transform = ''; r.style.opacity = ''; r.classList.remove('is-on'); }); dot.style.transform = '';
+        tiles.forEach(t => { t.style.transform = ''; t.style.opacity = ''; }); stats.classList.remove('is-on');
+      };
     });
   })();
 

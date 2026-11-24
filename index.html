@@ -358,12 +358,14 @@
 <!-- 03 · The problem -->
 <section class="sec lock-light" id="why">
   <div class="wrap">
-    <div class="sec-head rv">
-      <span class="eyebrow">why outbound stalls</span>
-      <h2 class="h2 split">Most outbound fails in one of three places. <em>We fix all three.</em></h2>
-    </div>
     <div class="pa-scroll" data-dial>
-      <div class="dial-rail" aria-hidden="true"><span class="count"><b data-dial-n>01</b> / 03</span><span class="track"><i data-dial-dot></i></span></div>
+     <div class="pa-sticky">
+      <div class="sec-head rv">
+        <span class="eyebrow">why outbound stalls</span>
+        <h2 class="h2 split">Most outbound fails in one of three places. <em>We fix all three.</em></h2>
+      </div>
+      <div class="pa-frame">
+      <div class="dial-rail" aria-hidden="true"><span class="track"><i data-dial-dot></i></span><span class="count"><b data-dial-n>01</b> / 03</span></div>
       <div class="pa">
         <div class="pa-row rv">
           <div class="pain-col"><svg class="st-ico pain-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><path d="M32 4v56"/><path d="M23 11l9 7 9-7M23 53l9-7 9 7"/></g><g class="ip" style="--i:1"><path d="M7.8 18l48.4 28M56.2 18L7.8 46"/></g></svg><span class="pain">Lists are cold</span></div>
@@ -381,11 +383,13 @@
           <svg class="st-ico ans-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><rect x="4" y="8" width="56" height="48" rx="8"/></g><g class="ip" style="--i:1"><path d="M4 23h56"/></g><g class="ip" style="--i:2"><path d="M20 40l8 8 16-16"/></g></svg><div class="ans"><h3 class="h3">Inside your CRM <span class="badge booked">Meeting booked</span></h3><p>Every touch, note and booked meeting lands in your <span class="lg-word"><img class="lg" src="assets/logos/hubspot.svg" alt="" width="16" height="16" loading="lazy">HubSpot</span> or <span class="lg-word"><img class="lg" src="assets/logos/salesforce.svg" alt="" width="16" height="16" loading="lazy">Salesforce</span> and your <span class="lg-word"><img class="lg" src="assets/logos/slack.svg" alt="" width="16" height="16" loading="lazy">Slack</span>. You keep the data.</p></div>
         </div>
       </div>
-    </div>
-    <div class="pa-stats">
+      <div class="pa-stats">
       <div class="metric-tile rv"><svg class="st-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><rect x="6" y="10" width="52" height="48" rx="8"/><path d="M6 26h52M20 4v12M44 4v12"/></g><g class="ip" style="--i:1"><path d="M32 35v9h8"/></g></svg><span class="metric-s">6–9 mo</span><span class="metric-label">to hire and ramp an in-house SDR team</span></div>
       <div class="metric-tile rv" style="--d:60ms"><svg class="st-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><circle cx="32" cy="32" r="28"/></g><g class="ip" style="--i:1"><path d="M42 22.5a13 13 0 1 0 0 19M17 28h17M17 36h17"/></g></svg><span class="metric-s">€100–200k</span><span class="metric-label">a year for a small team, before the first meeting</span></div>
       <div class="metric-tile rv" style="--d:120ms"><svg class="st-ico" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><g class="ip" style="--i:0"><path d="M26 58H12a6 6 0 0 1-6-6V12a6 6 0 0 1 6-6h14"/></g><g class="ip" style="--i:1"><path d="M24 32h34M45 19l13 13-13 13"/></g></svg><span class="metric-s">39%</span><span class="metric-label">average yearly SDR attrition (Bridge Group, 2018)</span></div>
+      </div>
+      </div>
+     </div>
     </div>
 
     <div class="cmp-wrap rv">
@@ -420,20 +424,15 @@
           <h2 class="h2 split">From your whole market to <em>meetings in your calendar.</em></h2>
         </div>
 
-        <div class="fn-counters" aria-hidden="true">
-          <div class="fn-count k0"><b data-c="0">2,400</b><span>accounts in your ICP</span></div>
-          <div class="fn-count k1"><b data-c="1">38</b><span>showing buying signals</span></div>
-          <div class="fn-count k2"><b data-c="2">112</b><span>calls by named SDRs</span></div>
-          <div class="fn-count k3"><b data-c="3">5</b><span>meetings booked</span></div>
-        </div>
-
         <div class="fn-stage" role="img" aria-label="2,400 accounts are filtered by buying signals to 38, SDRs make 112 calls, and 5 meetings land in HubSpot this week.">
           <svg class="fn-wires" data-fn-wires aria-hidden="true"></svg>
           <div class="fn-zone">
-            <span class="chrome"><span>your market</span><span>2,400</span></span>
+            <div class="fn-count k0" aria-hidden="true"><b data-c="0">2,400</b></div>
+            <span class="chrome"><span>your market</span></span>
             <div class="fn-cloud" data-cloud><i class="fn-beam" data-beam></i></div>
           </div>
           <div class="fn-zone">
+            <div class="fn-count k1" aria-hidden="true"><b data-c="1">38</b></div>
             <span class="chrome"><span class="sig">signals · this week</span></span>
             <div class="fn-sig" data-sig><div><span class="chrome sig">funding</span><b>Fintech, Dublin</b></div><span class="data">Series A</span></div>
             <div class="fn-sig" data-sig><div><span class="chrome sig">hiring</span><b>Insurtech, London</b></div><span class="data">3 SDRs</span></div>
@@ -442,6 +441,7 @@
             <div class="fn-sig" data-sig><div><span class="chrome sig">hiring</span><b>HR SaaS, Galway</b></div><span class="data">2 AEs</span></div>
           </div>
           <div class="fn-zone">
+            <div class="fn-count k2" aria-hidden="true"><b data-c="2">112</b></div>
             <span class="chrome"><span class="live">sdr floor · dublin</span></span>
             <div class="call-row fn-call" data-call><span class="avatar">AM</span><span class="who"><b>Fintech, Dublin</b><span>Aoife M. · Head of Sales</span></span><span class="badge neutral" data-badge>Dialling</span></div>
             <div class="call-row fn-call" data-call><span class="avatar">CR</span><span class="who"><b>Insurtech, London</b><span>Callum R. · CRO</span></span><span class="badge neutral" data-badge>Dialling</span></div>
@@ -449,6 +449,7 @@
             <div class="call-row fn-call" data-call><span class="avatar">CD</span><span class="who"><b>RegTech, Leeds</b><span>Ciarán D. · COO</span></span><span class="badge neutral" data-badge>Dialling</span></div>
           </div>
           <div class="fn-zone">
+            <div class="fn-count k3" aria-hidden="true"><b data-c="3">5</b></div>
             <span class="chrome"><span class="ok lg-label"><img class="lg" src="assets/logos/hubspot.svg" alt="" width="16" height="16" loading="lazy">hubspot · meetings</span></span>
             <div class="fn-booked" data-booked>
               <i class="lock-bk tl"></i><i class="lock-bk tr"></i><i class="lock-bk bl"></i><i class="lock-bk br"></i>
@@ -515,9 +516,9 @@
         <div class="stack" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
         <ul><li>Everything in Outbound</li><li>Dedicated SDRs from Dublin or London</li><li>Supervisor QA on every call</li></ul>
         <p class="price">Priced per SDR</p>
-        <a href="#book" class="btn btn-secondary">Talk about SDRs</a>
+        <a href="#book" class="btn btn-primary"><i class="bk tl"></i><i class="bk tr"></i><i class="bk bl"></i><i class="bk br"></i>Talk about SDRs</a>
       </article>
-      <article class="tier-card rv" style="--d:120ms">
+      <article class="tier-card alt rv" style="--d:120ms">
         <div class="top"><h3 class="h4">Full stack</h3><span class="chip">Retainer + sprints</span></div>
         <p class="sit">You're entering new markets and want every channel working one list.</p>
         <div class="stack" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
