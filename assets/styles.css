@@ -1164,3 +1164,13 @@ html { scroll-behavior: smooth; }
   .hub-svg .core-halo { animation: none; }
   .hub-frame .hub-svg .node, .hub-frame .hub-svg .core, .hub-frame .hub-svg .wires-in, .hub-frame .hub-svg .wires-out { transform: none !important; clip-path: none !important; }
 }
+
+/* ---------- v5 · converging-beam hero: glass stage over the light ---------- */
+.hero .stage {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 72%, transparent), color-mix(in srgb, var(--surface) 88%, transparent));
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+  border-color: color-mix(in srgb, var(--line-strong) 55%, transparent);
+  box-shadow: inset 0 1px 0 var(--highlight), var(--depth-mockup);
+}
+.hero .stage::after { content: ""; position: absolute; left: 12%; right: 12%; top: -1px; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--aqua), transparent); opacity: .7; }

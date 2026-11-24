@@ -539,7 +539,8 @@
 
     const fields = cvs.map(canvas => {
       const ctx = canvas.getContext('2d');
-      const kind = canvas.dataset.fx;
+      // hero defaults to converging beams; ?hero=ribbons shows the earlier curtain version
+      const kind = canvas.dataset.fx === 'beams' && params.get('hero') === 'ribbons' ? 'curtain' : canvas.dataset.fx;
       const f = { canvas, ctx, kind, w: 0, h: 0, col: {}, mask: null, on: false };
 
       f.colours = () => {
@@ -552,6 +553,16 @@
         f.w = Math.max(1, Math.round(r.width)); f.h = Math.max(1, Math.round(r.height));
         canvas.width = Math.round(f.w * DPR); canvas.height = Math.round(f.h * DPR);
         ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        if (kind === 'beams') {
+          const m = document.createElement('canvas'); m.width = canvas.width; m.height = canvas.height;
+          const mc = m.getContext('2d'); mc.setTransform(DPR, 0, 0, DPR, 0, 0);
+          const cx = f.w / 2, rx = Math.min(f.w * 0.3, 520), ry = f.h * 0.42;
+          mc.save(); mc.translate(cx, f.h * 0.33); mc.scale(rx / ry, 1);
+          const g = mc.createRadialGradient(0, 0, 0, 0, 0, ry);
+          g.addColorStop(0, 'rgba(0,0,0,.92)'); g.addColorStop(0.45, 'rgba(0,0,0,.85)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+          mc.fillStyle = g; mc.fillRect(-ry, -ry, ry * 2, ry * 2); mc.restore();
+          f.mask = m;
+        }
         if (kind === 'curtain') {
           // mask = the dark stage in the middle (cut out after drawing); ribbons gather at the sides and curve in toward the floor
           const m = document.createElement('canvas'); m.width = canvas.width; m.height = canvas.height;
@@ -568,11 +579,88 @@
         const { w, h, col } = f;
         ctx.clearRect(0, 0, w, h);
         ctx.globalCompositeOperation = col.light ? 'source-over' : 'lighter';
-        if (kind === 'curtain') drawCurtain(f, t); else drawHorizon(f, t);
+        if (kind === 'beams') drawBeams(f, t); else if (kind === 'curtain') drawCurtain(f, t); else drawHorizon(f, t);
         ctx.globalCompositeOperation = 'source-over';
       };
       return f;
     });
+
+    /* Converging beams: light streaks in from both sides toward a vanishing
+       point behind the call to action, over layered diamonds that drift
+       outward like a tunnel. Beams draw in once on load (~1.6s), then
+       pulses keep travelling inward. */
+    const rand = (i, k) => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };
+    function drawBeams(f, t) {
+      const { ctx, w, h, col } = f;
+      const small = w < 768;
+      const vx = w / 2, vy = h * (small ? 0.6 : 0.57);
+      const k = col.k;
+
+      // side blooms where the beams are brightest
+      [-1, 1].forEach(s => {
+        const bx = s < 0 ? w * 0.04 : w * 0.96, by = vy - h * 0.06;
+        ctx.save(); ctx.translate(bx, by); ctx.scale(1, 0.55);
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.32);
+        g.addColorStop(0, hexA(col.ray, 0.34 * k)); g.addColorStop(1, hexA(col.ray, 0));
+        ctx.fillStyle = g; ctx.fillRect(-w * 0.32, -w * 0.32, w * 0.64, w * 0.64); ctx.restore();
+      });
+
+      // layered diamonds around the vanishing point, drifting outward
+      const D = 6;
+      for (let i = 0; i < D; i++) {
+        const p = reduced ? (i + 0.5) / D : ((i + t * 0.07) % D) / D;  // 0 → 1 as it grows
+        const r = (0.08 + p * 0.95) * Math.max(w * 0.5, h * 0.9);
+        const a = Math.sin(p * Math.PI) * 0.16 * k;
+        ctx.save(); ctx.translate(vx, vy); ctx.scale(1.25, 0.72); ctx.rotate(Math.PI / 4);
+        const g = ctx.createLinearGradient(-r, 0, r, 0);
+        g.addColorStop(0, hexA(col.ray, a * 0.55)); g.addColorStop(0.5, hexA(col.ray, 0)); g.addColorStop(1, hexA(col.ray, a * 0.55));
+        ctx.fillStyle = g; ctx.fillRect(-r / Math.SQRT2, -r / Math.SQRT2, r * Math.SQRT2, r * Math.SQRT2);
+        ctx.strokeStyle = hexA(col.hi, a * 0.6); ctx.lineWidth = 1;
+        ctx.strokeRect(-r / Math.SQRT2, -r / Math.SQRT2, r * Math.SQRT2, r * Math.SQRT2);
+        ctx.restore();
+      }
+
+      // the beams
+      const N = small ? 14 : 26;
+      ctx.lineCap = 'round';
+      for (let s = -1; s <= 1; s += 2) {
+        for (let i = 0; i < N; i++) {
+          const j = i + (s > 0 ? 100 : 0);
+          const ex = s < 0 ? -20 : w + 20;
+          const ey = vy + (i / (N - 1) - 0.5) * h * 1.25 + (rand(j, 1) - 0.5) * h * 0.08;
+          const stop = 0.5 + rand(j, 2) * 0.32;                 // beams fade before the centre
+          const ix = ex + (vx - ex) * stop, iy = ey + (vy - ey) * stop;
+          const weight = Math.exp(-Math.pow((ey - vy) / (h * 0.42), 2));
+          const hero = rand(j, 3) > 0.78;                        // a few bright, thick beams
+          const intro = reduced ? 1 : easeOut(clamp((t - 0.15 - rand(j, 4) * 0.6) / 1.1));
+          if (intro <= 0) continue;
+          const tx = ex + (ix - ex) * intro, ty = ey + (iy - ey) * intro;
+          const base = (0.12 + 0.6 * weight) * (hero ? 1.5 : 1) * k;
+          const g = ctx.createLinearGradient(ex, ey, ix, iy);
+          g.addColorStop(0, hexA(col.ray, 0)); g.addColorStop(0.18, hexA(col.hi, clamp(base))); g.addColorStop(1, hexA(col.ray, 0));
+          ctx.strokeStyle = g;
+          if (hero) { ctx.globalAlpha = 0.25; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(tx, ty); ctx.stroke(); }
+          ctx.globalAlpha = 1; ctx.lineWidth = hero ? 2.2 : 1;
+          ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(tx, ty); ctx.stroke();
+          // a pulse of light travelling inward along the beam
+          if (intro >= 1 && weight > 0.15) {
+            const sp = 0.16 + rand(j, 5) * 0.14;
+            const q = reduced ? 0.45 : (t * sp + rand(j, 6)) % 1;
+            const q0 = Math.max(0, q - 0.14);
+            const ax = ex + (ix - ex) * q0, ay = ey + (iy - ey) * q0, bx = ex + (ix - ex) * q, by = ey + (iy - ey) * q;
+            const pg = ctx.createLinearGradient(ax, ay, bx, by);
+            const pa = clamp(Math.sin(q * Math.PI) * weight * 0.9 * k);
+            pg.addColorStop(0, hexA(col.hi, 0)); pg.addColorStop(1, hexA(col.hi, pa));
+            ctx.strokeStyle = pg; ctx.lineWidth = hero ? 3 : 1.6;
+            ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+      // keep the headline area calm
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.drawImage(f.mask, 0, 0, w, h);
+    }
 
     function drawCurtain(f, t) {
       const { ctx, w, h, col } = f;
@@ -637,9 +725,9 @@
     requestAnimationFrame(() => fields.forEach(f => f.canvas.classList.add('is-on')));
 
     let ro;
-    const redrawAll = () => fields.forEach(f => { f.colours(); f.size(); f.draw(f.t || 2); });
+    const redrawAll = () => fields.forEach(f => { f.colours(); f.size(); f.draw(f.t ?? (reduced ? 2 : 0)); });
     if ('ResizeObserver' in window) { ro = new ResizeObserver(redrawAll); fields.forEach(f => ro.observe(f.canvas)); }
-    new MutationObserver(() => fields.forEach(f => { f.colours(); f.draw(f.t || 2); })).observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode', 'data-theme'] });
+    new MutationObserver(() => fields.forEach(f => { f.colours(); f.draw(f.t ?? (reduced ? 2 : 0)); })).observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode', 'data-theme'] });
     (document.fonts?.ready || Promise.resolve()).then(redrawAll);
     if (reduced) return;
 
