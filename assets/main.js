@@ -182,12 +182,59 @@
   addEventListener('resize', () => { if (current) place(current); });
   if (pinned) (document.fonts?.ready || Promise.resolve()).then(() => open(params.get('open')));
 
+  /* ---------------- squeeze the header into a pill once the page scrolls ---------------- */
+  (function squeeze() {
+    const wide = matchMedia('(min-width: 1024px)');
+    const still = matchMedia('(prefers-reduced-motion: reduce)');
+    const logo = $('.logo', nav), list = $('.nav-list', nav), actions = $('.nav-actions', nav);
+    const movers = () => [logo, list, ...[...actions.children].filter(k => !k.classList.contains('nav-slot'))];
+    const hs = () => getComputedStyle(header), v = n => parseFloat(hs().getPropertyValue(n)) || 0;
+    // Width the pill needs: logo + links + visible CTAs, two equal gaps, and the pill's own padding.
+    function fit() {
+      const aGap = parseFloat(getComputedStyle(actions).columnGap) || 0;
+      const kids = [...actions.children].filter(k => !k.classList.contains('nav-slot') && getComputedStyle(k).display !== 'none');
+      const aW = kids.reduce((w, k) => w + k.offsetWidth, 0) + aGap * Math.max(0, kids.length - 1);
+      const w = logo.offsetWidth + list.scrollWidth + aW + v('--sq-gap') * 2 + v('--sq-pl') + v('--sq-pr');
+      nav.style.setProperty('--nav-fit', Math.ceil(w) + 'px');
+    }
+    // Pill edges follow the nav's laid-out box (nav itself never carries a transform).
+    function pill() {
+      const h = header.getBoundingClientRect(), n = nav.getBoundingClientRect();
+      header.style.setProperty('--pill-l', (n.left - h.left) + 'px');
+      header.style.setProperty('--pill-r', (h.right - n.right) + 'px');
+    }
+    let on = null;
+    function set(next) {
+      if (next === on) return;
+      const first = on !== null && !still.matches;
+      const els = movers();
+      const before = first ? els.map(e => e.getBoundingClientRect().left) : null;   // includes any in-flight transform
+      els.forEach(e => { e.style.transition = 'none'; e.style.transform = ''; });
+      on = next;
+      if (on) fit();
+      header.classList.toggle('is-squeezed', on);
+      if (on) pill();
+      if (current) place(current);
+      if (!first) return;
+      els.forEach((e, i) => { const dx = before[i] - e.getBoundingClientRect().left; if (Math.abs(dx) > .5) e.style.transform = `translateX(${dx}px)`; });
+      void nav.offsetWidth;
+      els.forEach(e => { e.style.transition = 'transform var(--dur-lock) var(--ease-out)'; e.style.transform = ''; });
+    }
+    // Hysteresis so a scroll hovering near the top can't flicker between states.
+    const update = () => set(wide.matches && (on ? scrollY > 0 : scrollY > 8));
+    addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', () => { if (on) { fit(); pill(); } });
+    wide.addEventListener('change', () => { on = null; header.classList.remove('is-squeezed'); update(); });
+    (document.fonts?.ready || Promise.resolve()).then(() => { if (on) { fit(); pill(); } });
+    update();
+  })();
+
   /* ---------------- mark the section the current page belongs to ---------------- */
   (function current() {
     const file = location.pathname.split('/').pop() || 'index.html';
     const group = /^(service|claude-code)/.test(file) ? 'services' : /^case/.test(file) ? 'results' : /^pricing/.test(file) ? 'pricing'
       : /^(about|uk-ireland|gdpr|tools|playbook|blog|post|newsletter|careers|contact)/.test(file) ? 'about' : null;
-    if (group) triggers[order.indexOf(group)].classList.add('is-here');
+    if (group && order.includes(group)) triggers[order.indexOf(group)].classList.add('is-here');
     $$('.foot-col a, .msheet-body a').forEach(a => { if (a.getAttribute('href') === file) a.setAttribute('aria-current', 'page'); });
   })();
 
@@ -1060,13 +1107,6 @@
     });
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' });
     heads.forEach(h => io.observe(h));
-  })();
-
-  /* ---------------- reading progress under the header ---------------- */
-  (function progress() {
-    const bar = $('.read-progress');
-    if (!bar || !G || !ST) return;
-    G.fromTo(bar, { scaleX: 0 }, { scaleX: 1, ease: 'none', transformOrigin: 'left', scrollTrigger: { start: 0, end: 'max', scrub: reduced ? true : 0.25 } });
   })();
 
   /* ---------------- client results: logo tabs rotate the case studies ---------------- */

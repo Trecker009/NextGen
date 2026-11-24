@@ -196,11 +196,12 @@ ul { list-style: none; margin: 0; padding: 0; }
 
 /* Primary: solid aqua, navy label, signal-lock brackets */
 .btn-primary { background: var(--aqua); color: var(--on-aqua); border-color: var(--aqua-edge); box-shadow: var(--depth-glow); }
-.bk { position: absolute; width: 10px; height: 10px; pointer-events: none; opacity: .55; border: 0 solid var(--aqua-mark); filter: drop-shadow(0 0 2px var(--aqua-glow)); transition: opacity var(--dur-hover) ease, transform var(--dur-ui) var(--ease-lock); }
-.bk.tl { top: -7px; left: -7px; border-top-width: 2px; border-left-width: 2px; }
-.bk.tr { top: -7px; right: -7px; border-top-width: 2px; border-right-width: 2px; }
-.bk.bl { bottom: -7px; left: -7px; border-bottom-width: 2px; border-left-width: 2px; }
-.bk.br { bottom: -7px; right: -7px; border-bottom-width: 2px; border-right-width: 2px; }
+/* Corner brackets: rounded at the outer corner only. */
+.bk { --bk-r: var(--radius-md); position: absolute; width: 18px; height: 18px; pointer-events: none; opacity: .55; border: 0 solid var(--aqua-mark); filter: drop-shadow(0 0 2px var(--aqua-glow)); transition: opacity var(--dur-hover) ease, transform var(--dur-ui) var(--ease-lock); }
+.bk.tl { top: -7px; left: -7px; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: var(--bk-r); }
+.bk.tr { top: -7px; right: -7px; border-top-width: 2px; border-right-width: 2px; border-top-right-radius: var(--bk-r); }
+.bk.bl { bottom: -7px; left: -7px; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: var(--bk-r); }
+.bk.br { bottom: -7px; right: -7px; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: var(--bk-r); }
 @media (hover: hover) and (pointer: fine) {
   .btn-primary:hover { background: var(--aqua-hover); box-shadow: var(--depth-glow-hover); }
   .btn-primary:hover .bk { opacity: 1; }
@@ -270,7 +271,7 @@ button.chip[aria-pressed="true"]:hover { color: var(--link); border-color: var(-
 .site-header { position: sticky; top: 0; z-index: 50; background: var(--canvas); border-bottom: 1px solid var(--line); }
 .nav { position: relative; display: flex; align-items: center; gap: var(--space-5); height: var(--header-h); max-width: calc(var(--container) + var(--side) * 2); margin: 0 auto; padding: 0 var(--side); }
 .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 20px; line-height: 28px; letter-spacing: -0.02em; white-space: nowrap; }
-.logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--aqua); box-shadow: 0 0 0 4px var(--aqua-soft); }
+.logo img { display: block; height: 28px; width: auto; }
 .nav-list { display: flex; align-items: center; gap: var(--space-6); margin: 0 auto; }
 .nav-trigger { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 40px; font-size: 15px; line-height: 20px; color: var(--ink-muted); transition: color var(--dur-hover) ease; }
 .nav-trigger::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 1px; background: var(--link); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-reveal) var(--ease-out); }
@@ -284,6 +285,25 @@ button.chip[aria-pressed="true"]:hover { color: var(--link); border-color: var(-
 .nav-slot b { display: block; font-family: var(--mono); font-weight: 500; font-size: 13px; line-height: 18px; color: var(--ink); }
 .nav-slot span { font-size: 12px; line-height: 16px; color: var(--ink-muted); }
 @media (min-width: 1280px) { .nav-slot { display: block; } }
+/* Scrolled header: the bar squeezes in from both sides to a centred pill that just fits
+   logo, links and CTAs with one equal gap between them. Nothing re-flows while it moves:
+   the layout switches in one frame, the pill (a header pseudo-element) eases its left/right edges,
+   and main.js glides the logo, links and CTAs from their old spots with transforms (FLIP). */
+@media (min-width: 1024px) {
+  .site-header { --sq-gap: 40px; --sq-pl: 32px; --sq-pr: 20px; transition: background-color var(--dur-lock) var(--ease-out), border-color var(--dur-lock) var(--ease-out); }
+  .site-header::before { content: ""; position: absolute; top: 2px; bottom: 2px; left: 0; right: 0; z-index: -1; border-radius: 999px; border: 1px solid var(--line-strong); background: color-mix(in srgb, var(--canvas) 84%, transparent); -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); box-shadow: 0 10px 30px -12px rgb(0 0 0 / .55); opacity: 0; pointer-events: none; transition: left var(--dur-lock) var(--ease-out), right var(--dur-lock) var(--ease-out), opacity var(--dur-lock) var(--ease-out); }
+  .site-header.is-squeezed { background: transparent; border-bottom-color: transparent; }
+  .site-header.is-squeezed::before { left: var(--pill-l, 0px); right: var(--pill-r, 0px); opacity: 1; }
+  .site-header.is-squeezed .nav { max-width: var(--nav-fit, 780px); gap: var(--sq-gap); padding: 0 var(--sq-pr) 0 var(--sq-pl); }
+  .site-header.is-squeezed .nav-slot { display: none; }
+  .site-header .nav-slot { animation: nav-slot-in var(--dur-lock) var(--ease-out); }
+}
+@keyframes nav-slot-in { from { opacity: 0; } }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .site-header, .site-header::before { transition: none; }
+  .site-header .nav-slot { animation: none; }
+}
 .burger { display: none; width: 40px; height: 40px; border-radius: var(--radius-sm); place-items: center; align-content: center; border: 1px solid var(--line-strong); background: var(--surface); box-shadow: var(--depth-raised); }
 .burger span { display: block; width: 18px; height: 1.5px; background: var(--ink); border-radius: 1px; transition: transform var(--dur-reveal) var(--ease-out); }
 .burger span + span { margin-top: 5px; }
@@ -898,9 +918,6 @@ html { scroll-behavior: smooth; }
 .sec > *, .hero > *, .logos > *, .closing > *, .footer > * { position: relative; z-index: 1; }
 @media (max-width: 1023px) { .sec::after, .hero::after, .logos::after, .closing::after, .footer::after { display: none; } }
 .footer { position: relative; }
-
-/* ---------- header: reading progress ---------- */
-.read-progress { position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%; background: var(--ink-muted); transform-origin: left; transform: scaleX(0); pointer-events: none; }
 
 /* ---------- headings that reveal word by word ---------- */
 .split .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .1em; margin-bottom: -.1em; }
