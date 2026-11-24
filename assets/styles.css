@@ -554,9 +554,11 @@ section { position: relative; }
   .pa-scroll.dial-on { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; height: 240vh; }
   .dial-on > .pa, .dial-on > .dial-rail { grid-area: 1 / 1; } /* one shared sticky frame, so the rail leaves with the rows */
   .dial-on .pa { position: sticky; top: calc(var(--header-h) + 8vh); height: 72vh; border-top: 0; perspective: 1400px; }
-  .dial-on .pa-row { position: absolute; left: 56px; right: 0; top: 50%; border-bottom: 0; padding: 0; will-change: transform, opacity; transform-origin: 50% 50% -200px; }
+  .dial-on .pa-row { position: absolute; left: 80px; right: 0; top: 50%; border-bottom: 0; padding: 0; will-change: transform, opacity; transform-origin: 50% 50% -200px; }
   .dial-on .pa-row.rv { transition: none; }
-  .dial-on .pa-row .ans p { transition: opacity var(--dur-reveal); }
+  /* the description hangs below the heading, so the heading always lines up with the struck-out pain */
+  .dial-on .pa-row .ans { position: relative; }
+  .dial-on .pa-row .ans p { position: absolute; top: 100%; left: 0; margin-top: var(--space-2); transition: opacity var(--dur-reveal); }
   .dial-on .pa-row:not(.is-on) .ans p { opacity: 0; }
   .dial-on .pa-row.is-on .to { color: var(--ink); border-color: var(--ink); }
   .dial-on > .dial-rail { display: block; position: sticky; top: calc(var(--header-h) + 8vh); height: 72vh; z-index: 2; pointer-events: none; }
