@@ -56,24 +56,24 @@
     toastT = setTimeout(() => toastEl.classList.remove('on'), 2600);
   }
 
-  /* ---------------- theme: light / dark / system ---------------- */
+  /* ---------------- theme: light / dark ---------------- */
   (function theme() {
     const groups = $$('[data-theme-toggle]');
+    const os = () => (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     function apply(mode) {
-      if (mode === 'light' || mode === 'dark') document.documentElement.setAttribute('data-theme', mode);
-      else document.documentElement.removeAttribute('data-theme');
+      document.documentElement.setAttribute('data-theme', mode);
+      document.documentElement.setAttribute('data-mode', mode); // drives section tones and the .hl highlight
       groups.forEach(g => $$('button', g).forEach(b => b.setAttribute('aria-checked', String(b.dataset.set === mode))));
-      const light = mode === 'light' || (mode === 'system' && matchMedia('(prefers-color-scheme: light)').matches);
-      document.documentElement.setAttribute('data-mode', light ? 'light' : 'dark'); // drives section tones and the .hl highlight
     }
     const saved = store.get('ng-theme');
-    apply(saved === 'light' || saved === 'dark' ? saved : 'system');
+    apply(saved === 'light' || saved === 'dark' ? saved : os());
     groups.forEach(g => $$('button', g).forEach(b => b.addEventListener('click', () => {
       store.set('ng-theme', b.dataset.set);
       const run = () => apply(b.dataset.set);
       if (document.startViewTransition && !reduced) document.startViewTransition(run); else run();
     })));
-    matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (!document.documentElement.hasAttribute('data-theme')) apply('system'); });
+    // until the visitor picks one, keep following the OS if it changes
+    matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { const t = store.get('ng-theme'); if (t !== 'light' && t !== 'dark') apply(os()); });
   })();
 
   /* ---------------- next free slot (Irish / UK time) ---------------- */
