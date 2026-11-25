@@ -984,23 +984,26 @@
     const RIP_EVERY = 2.4, RIP_LIFE = 7.2;         // a new ripple every 2.4s, each lives 7.2s
     const smooth = (a, b, x) => { const k = clamp((x - a) / (b - a)); return k * k * (3 - 2 * k); };
     const hash = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
-    const COPY = '.hero-pill, .hero h1, .hero .lead, .hero .capture, .hero .capture-m, .hero .form-meta > span, .proof-row > div';
+    // copy the rings and globe keep clear of, looked up inside whichever block holds the canvas (hero or closing panel)
+    const COPY = '.hero-pill, h1, h2, .eyebrow, .lead, .capture, .capture-m, .form-meta > *, .proof-row > div, .hero-logos .logo-grid, .hero-logos .logo-caption';
 
     function sizeGlobe(f, r) {
       const { w, h } = f;
-      const hero = f.canvas.closest('.hero');
-      // --globe-r is clamp(160px, 21vw, 340px); custom properties come back unresolved, so mirror it here
-      const R = Math.round(clamp(innerWidth * 0.21, 160, 340));
+      const root = f.canvas.closest('.hero, .closing-panel') || f.canvas.parentElement;
+      const inHero = root.classList.contains('hero');
+      // hero: --globe-r is clamp(160px, 21vw, 340px) (custom properties come back unresolved, so it's mirrored here);
+      // closing panel: sized to the panel so the bowl fits the space under its form
+      const R = Math.round(inHero ? clamp(innerWidth * 0.21, 160, 340) : clamp(w * 0.27, 130, 260));
       const cx = Math.round(w / 2 / PITCH) * PITCH;
       // a bowl: the globe's centre sits on the line just under the form's meta row, its lower half hangs below
-      const box = sel => { const e = hero.querySelector(sel); const b = e && e.getBoundingClientRect(); return b && b.height ? b : null; };
-      const meta = box('.hero .form-meta'), form = box('.hero .capture') || box('.capture-m');
+      const box = sel => { const e = root.querySelector(sel); const b = e && e.getBoundingClientRect(); return b && b.height ? b : null; };
+      const meta = box('.form-meta'), form = box('.capture') || box('.capture-m');
       const cut = Math.round(((meta ? meta.bottom - r.top : h * 0.5) + 8) / PITCH) * PITCH;   // the flat top edge
       const cy = Math.round((cut - R * 0.2) / PITCH) * PITCH;   // centre a little above it, so a bit more than half the globe shows
       // ripples ring out from the form
       const ry = Math.round((form ? form.top - r.top + form.height / 2 : cy - 60) / PITCH) * PITCH;
       // the copy's boxes: the globe dims there and the ripples fade out well before them
-      const copy = [...hero.querySelectorAll(COPY)].map(e => {
+      const copy = [...root.querySelectorAll(COPY)].map(e => {
         const b = e.getBoundingClientRect();
         return [b.left - r.left, b.top - r.top, b.right - r.left, b.bottom - r.top];
       }).filter(q => q[2] > q[0] && q[3] > q[1]);
