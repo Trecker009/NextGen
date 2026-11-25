@@ -199,7 +199,7 @@
       const aGap = parseFloat(getComputedStyle(actions).columnGap) || 0;
       const kids = [...actions.children].filter(k => !k.classList.contains('nav-slot') && getComputedStyle(k).display !== 'none');
       const aW = kids.reduce((w, k) => w + k.offsetWidth, 0) + aGap * Math.max(0, kids.length - 1);
-      const w = logo.offsetWidth + list.scrollWidth + aW + v('--sq-gap') * 2 + v('--sq-pl') + v('--sq-pr');
+      const w = v('--sq-logo') + list.scrollWidth + aW + v('--sq-gap') * 2 + v('--sq-pl') + v('--sq-pr'); // the pill shows only the logo mark
       nav.style.setProperty('--nav-fit', Math.ceil(w) + 'px');
     }
     // Pill edges follow the nav's laid-out box (nav itself never carries a transform).
@@ -792,8 +792,10 @@
       f.size = () => {
         const r = canvas.getBoundingClientRect();
         f.w = Math.max(1, Math.round(r.width)); f.h = Math.max(1, Math.round(r.height));
-        canvas.width = Math.round(f.w * DPR); canvas.height = Math.round(f.h * DPR);
-        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        const dpr = kind === 'globe' ? (devicePixelRatio >= 1.5 ? 2 : 1) : DPR; // whole pixels keep the globe's 3px squares crisp
+        canvas.width = Math.round(f.w * dpr); canvas.height = Math.round(f.h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        if (kind === 'globe') sizeGlobe(f, r);
         if (kind === 'converge') {
           // aim at the closing form; keep the copy above it calm
           const form = canvas.closest('.closing-panel').querySelector('.capture'), fr = form.getBoundingClientRect();
@@ -827,7 +829,7 @@
         const { w, h, col } = f;
         ctx.clearRect(0, 0, w, h);
         ctx.globalCompositeOperation = col.light ? 'source-over' : 'lighter';
-        if (kind === 'beams') drawBeams(f, t); else drawConverge(f, t);
+        if (kind === 'globe') drawGlobe(f, t); else if (kind === 'beams') drawBeams(f, t); else drawConverge(f, t);
         ctx.globalCompositeOperation = 'source-over';
       };
       return f;
@@ -961,6 +963,117 @@
       const rr = f.hw * 1.35, rg = ctx.createRadialGradient(0, 0, 0, 0, 0, rr), ra = (0.14 + Math.min(0.16, landed * 0.06)) * k;
       rg.addColorStop(0, hexA(col.ray, ra)); rg.addColorStop(1, hexA(col.ray, 0));
       ctx.fillStyle = rg; ctx.fillRect(-rr, -rr, rr * 2, rr * 2); ctx.restore();
+    }
+
+    /* Hero globe: a dot-matrix Earth (3x3px pixels on a 6px grid) turning on its axis,
+       hanging as a bowl under the form (flat edge on top, lower half showing, last rows fading),
+       with full-circle pond ripples rolling out from the form across the whole hero, fading in
+       and out; they stay clear of the copy. Size comes from --globe-r
+       on the hero, which also sets the room above the numbers.
+       Land: Natural Earth 110m (public domain), packed as a 240x120 equirectangular bitmap. */
+    const LAND_W = 240, LAND_H = 120;
+    const LAND = (() => {
+      const b = atob('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//AAf/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////////gAAD/AAcAAAAfgAAAAAAAAAAAAAAAEO3/9/////+AAAf4AAAAAAAH8AAAAAAAAAAAAAADAAc/wf////+AAAHAAAAAAAAAeAAAAAAAAAAAAAAM/3v/AAf///+AAAAAAAAPwAA//8AAfAAAAAAAAAAfIBv/gAD///+AAAAAAAA4AAH//wAACAAAAAAAAAA//z+/4AB///8AAAAAAABwDh/////wHgAAAwAGAAAd/4+//gB///4AAAADgADwP////////+AABAB//8/8/+/P/4B///4AAAA/8AADn//////////9+wH//////8/vH8A///AAAAD//5n//v////////////D/////////B/g//wAQAAH///////////////////P////////8P/Af8AP4AAf7+P///////////////Ah////////vB+Af4AHgAB//////////////////+AD///////8CvMAPwAAAAH/P/////////////////AH///////4APwADwAAAAH/P//////////////z/gAA/QH////4APzAAAAAAAH/D//////////////jgAAAPAA////+AP/gAAAAAOA+P////////////8APgAAA4AAP////wH/gAAAAAOB+P////////////wAPgAABAAAP////+f/8AAAAA3B5/////////////gAfAAAAAAAX/////f/+AAAAB3n///////////////AOAAAAAAAB///////+AAAAAnv///////////////AIAAAAAAAD///////2AAAAAO///////////////9AAAAAAAAAA//////+ngAAAAH////////////////AAAAAAAAAAf/////+PgAAAAD///////////////7AAAAAAAAAAf//////wAAAAAB///3/x/////////yAAAAAAAAAAf/////6AAAAAAB/7/iPj/////////jgAAAAAAAAAf/////gAAAAAA/wc/gHx////////+HAAAAAAAAAAf/////gAAAAAA/xvf//4////////4EAAAAAAAAAAf////+AAAAAAA/Bjd//5///////3wGAAAAAAAAAAP////8AAAAAAA/AOM//4///////hwEAAAAAAAAAAP////8AAAAAAA+fkM//////////84cAAAAAAAAAAH////8AAAAAAAP/wCC/////////wz8AAAAAAAAAAD////wAAAAAAAf/gAB/////////4HgAAAAAAAAAAA////gAAAAAAA//8eB/////////4MAAAAAAAAAAAA////AAAAAAAB//////////////4AAAAAAAAAAAAAX/5jAAAAAAAB//////////////8AAAAAAAAAAAAAf/wBgAAAAAAH//////7///////4AAAAAAAAAAAAAF/gB4AAAAAAP////+/8f//////wAAAAAAAAAAAAAG/gAIAAAAAAP/////f+wP/////oAAAAAAAAAAAAACfgDgAAAAAAf/////P/8H/////IAAAAAAAAAAAAAAfgQ4AAAAAA//////v/8D//f/4AAAAAAAAACAAAAAfxwOgAAAAAf/////v/4A/8P+QAAAAAAAAACAAAAAP/wL0AAAAAf/////n/wA/4P+wIAAAAAAAAAAAAAAD/gAAAAAAAf/////z/gA/gH/AMAAAAAAAAAAAAAAAX8AAAAAAAf/////7+AAfAF/gMAAAAAAAAAAAAAAAD+AAAAAAA///////4AAfAB/gMAAAAAAAAAAAAAAAAeAAAAAAAf//////gAAPAB/gKAAAAAAAAAAAAAAAAMD4AAAAAf/////+cAAOAAvgHAAAAAAAAAAAAAAAAGX/wAAAAP//////8AAHABiAXAAAAAAAAAAAAAAAAD//4AAAAH//////8AAFgBgADgAAAAAAAAAAAAAAAAP/8AAAAD//////4AABgAwBDgAAAAAAAAAAAAAAAAP//gAAAB/H////4AAAACYDgAAAAAAAAAAAAAAAAAP//wAAAAAA////wAAAADYHgAAAAAAAAAAAAAAAAAf//4AAAAAA////gAAAAB4PgAAAAAAAAAAAAAAAAA///4AAAAAA////AAAAAA4/uQAAAAAAAAAAAAAAAA///+AAAAAA///+AAAAAAcf8GAAAAAAAAAAAAAAAA////gAAAAA///8AAAAAAcfcDcAAAAAAAAAAAAAAA////+AAAAAf//4AAAAAAOCcr/hAAAAAAAAAAAAAA/////gAAAAP//wAAAAAAGAcAf3AAAAAAAAAAAAAA/////gAAAAP//wAAAAAAD4ABP4YAAAAAAAAAAAAAf////gAAAAP//wAAAAAAAe8gPYAAAAAAAAAAAAAAf////AAAAAP//4AAAAAAAALAAMDAAAAAAAAAAAAAP////AAAAAH//4AAAAAAAAACAAAAAAAAAAAAAAAAH///+AAAAAP//4IAAAAAAAAHjAAAAAAAAAAAAAAAH///8AAAAAP//4MAAAAAAAAvjgAAAAAAAAAAAAAAD///8AAAAAP//48AAAAAAAD/jgAEAAAAAAAAAAAAA///8AAAAAP//x4AAAAAAAH/7wAADAAAAAAAAAAAAf//8AAAAAP//B4AAAAAAAH//wAAAAAAAAAAAAAAAf//4AAAAAP/+B4AAAAAAA///4AQAAAAAAAAAAAAAf//4AAAAAH//BwAAAAAAD///8AIAAAAAAAAAAAAAf//wAAAAAH//BwAAAAAAD///+AAAAAAAAAAAAAAAf/+AAAAAAD/+BwAAAAAAD////AAAAAAAAAAAAAAAf/8AAAAAAD/8AAAAAAAAH////AAAAAAAAAAAAAAA//8AAAAAAD/8AAAAAAAAD////gAAAAAAAAAAAAAA//4AAAAAAB/4AAAAAAAAD////gAAAAAAAAAAAAAA//wAAAAAAB/4AAAAAAAAB////AAAAAAAAAAAAAAA//gAAAAAAA/wAAAAAAAAB/z//AAAAAAAAAAAAAAA//gAAAAAAA/AAAAAAAAAD+A/+AAAAAAAAAAAAAAB/8AAAAAAAAAAAAAAAAAAAgAf+AAQAAAAAAAAAAAB/8AAAAAAAAAAAAAAAAAAAAAH8AAIAAAAAAAAAAAB/8AAAAAAAAAAAAAAAAAAAAAD4AAOAAAAAAAAAAAB/gAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAD/AAAAAAAAAAAAAAAAAAAAAAA4AA8AAAAAAAAAAAD/AAAAAAAAAAAAAAAAAAAAAAAYAAwAAAAAAAAAAAD+AAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAAD4AAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAD8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH8AAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAH4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAP4AACAf/n//gAAAAAAAAAAAAAAAGAAAAAAAAAAAD//8B///////8AAAAAAAAAAAAAAA/AAAAAAAAHwP///8f////////+AAAAAAAAAAAAAD/gAAAABf///////8///////////AAAAAAAAAHwgB/wAAAAP////////////////////AAAAAB//4H////gAAAAf///////////////////8AAAAD////////8AAAAH////////////////////wAAAP////////+AAAAH/////////////////////gAAB3////////4AAHg//////////////////////4AAAAD///////+Bw/gD////////////////////+AAAAD//////////gf///////////////////////gAAAB///////////////////////////////////+A/+AD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////'), out = new Uint8Array(LAND_W * LAND_H);
+      for (let i = 0; i < out.length; i++) out[i] = (b.charCodeAt(i >> 3) >> (7 - (i & 7))) & 1;
+      return out;
+    })();
+    const PX = 3, PITCH = 6;                       // pixel size and grid step, CSS px
+    const TILT = 77 * Math.PI / 180;               // north pole tipped well toward the viewer, so the bowl shows the northern mid-latitudes
+    const LON0 = -18, SWAY = 14, SWAY_T = 40;      // centred on the North Atlantic, swaying +-14 degrees over 40s on its axis,
+                                                   // so the USA, UK, Europe and the Middle East all stay in view
+    const RIP_EVERY = 2.4, RIP_LIFE = 7.2;         // a new ripple every 2.4s, each lives 7.2s
+    const smooth = (a, b, x) => { const k = clamp((x - a) / (b - a)); return k * k * (3 - 2 * k); };
+    const hash = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
+    const COPY = '.hero-pill, .hero h1, .hero .lead, .hero .capture, .hero .capture-m, .hero .form-meta > span, .proof-row > div';
+
+    function sizeGlobe(f, r) {
+      const { w, h } = f;
+      const hero = f.canvas.closest('.hero');
+      // --globe-r is clamp(160px, 21vw, 340px); custom properties come back unresolved, so mirror it here
+      const R = Math.round(clamp(innerWidth * 0.21, 160, 340));
+      const cx = Math.round(w / 2 / PITCH) * PITCH;
+      // a bowl: the globe's centre sits on the line just under the form's meta row, its lower half hangs below
+      const box = sel => { const e = hero.querySelector(sel); const b = e && e.getBoundingClientRect(); return b && b.height ? b : null; };
+      const meta = box('.hero .form-meta'), form = box('.hero .capture') || box('.capture-m');
+      const cut = Math.round(((meta ? meta.bottom - r.top : h * 0.5) + 8) / PITCH) * PITCH;   // the flat top edge
+      const cy = Math.round((cut - R * 0.2) / PITCH) * PITCH;   // centre a little above it, so a bit more than half the globe shows
+      // ripples ring out from the form
+      const ry = Math.round((form ? form.top - r.top + form.height / 2 : cy - 60) / PITCH) * PITCH;
+      // the copy's boxes: the globe dims there and the ripples fade out well before them
+      const copy = [...hero.querySelectorAll(COPY)].map(e => {
+        const b = e.getBoundingClientRect();
+        return [b.left - r.left, b.top - r.top, b.right - r.left, b.bottom - r.top];
+      }).filter(q => q[2] > q[0] && q[3] > q[1]);
+      const gap = (x, y) => { let d = Infinity; for (const q of copy) d = Math.min(d, Math.hypot(Math.max(q[0] - x, 0, x - q[2]), Math.max(q[1] - y, 0, y - q[3]))); return d; };
+      const cells = [];
+      const ct = Math.cos(TILT), st = Math.sin(TILT);
+      for (let y = Math.max(0, cut); y <= Math.min(cy + R, h); y += PITCH) {  // everything below the flat edge
+        for (let x = cx - R; x <= cx + R; x += PITCH) {
+          const sx = (x - cx) / R, sy = -(y - cy) / R, d2 = sx * sx + sy * sy;
+          if (d2 > 1) continue;
+          const sz = Math.sqrt(1 - d2);
+          const by = sy * ct + sz * st, bz = -sy * st + sz * ct;   // undo the tilt
+          const lat = Math.asin(clamp(by, -1, 1)), lon = Math.atan2(sx, bz);
+          const row = Math.min(LAND_H - 1, Math.floor((Math.PI / 2 - lat) / Math.PI * LAND_H));
+          const col = (lon + Math.PI) / TAU * LAND_W;
+          const rim = smooth(0.78, 1, Math.sqrt(d2));                // limb glow
+          const fadeOut = 1 - smooth(cy + R * 0.6, cy + R * 0.9, y);           // the bowl's last rows melt away
+          const shade = (0.32 + 0.68 * sz) * (0.6 + 0.4 * smooth(0, 16, gap(x, y)));  // light dimming only: the UK sits just under the meta line
+          if (fadeOut < 0.01) continue;
+          cells.push(x - 1, y - 1, row * LAND_W, col, shade, rim, hash(x, y), fadeOut);
+        }
+      }
+      f.globe = { cx, cy, R, ry, cells: new Float32Array(cells), maxR: Math.hypot(Math.max(cx, w - cx), Math.max(ry, h - ry)), gap };
+    }
+
+    function drawGlobe(f, t) {
+      const { ctx, col, w, h } = f, g = f.globe;
+      if (!g) return;
+      const k = col.k, rgb = hexA(col.ray, 1).slice(5, -3), hi = hexA(col.hi, 1).slice(5, -3);
+      const sec = t;                                                  // the shared clock runs ~1 unit per second
+      // ---- ripples: quarter arcs either side, crest + fading trailers, swinging down and out ----
+      const seen = new Set();
+      const pond = (r, a) => {                                        // one full ring, centred on the form
+        if (a < 0.012 || r < 4) return;
+        const step = PITCH / r;
+        for (let ang = 0; ang < TAU; ang += step) {
+          const x = Math.round((g.cx + Math.cos(ang) * r) / PITCH) * PITCH, y = Math.round((g.ry + Math.sin(ang) * r) / PITCH) * PITCH;
+          if (x < 0 || x > w || y < 0 || y > h) continue;
+          const key = x * 8192 + y;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const al = a * smooth(24, 96, g.gap(x, y));                 // the copy stays clear
+          if (al < 0.01) continue;
+          ctx.fillStyle = `rgba(${rgb},${al.toFixed(3)})`;
+          ctx.fillRect(x - 1, y - 1, PX, PX);
+        }
+      };
+      const n0 = Math.floor((sec - RIP_LIFE) / RIP_EVERY), n1 = Math.floor(sec / RIP_EVERY);
+      for (let n = n0; n <= n1; n++) {
+        const age = sec - n * RIP_EVERY;
+        if (age < 0 || age > RIP_LIFE) continue;
+        const p = age / RIP_LIFE, ease = 1 - Math.pow(1 - p, 2.2);   // fast out of the splash, slowing as it spreads
+        const r = 24 + (g.maxR - 24) * ease;                          // from the form out past every corner of the hero
+        const fade = smooth(0, 0.22, p) * (1 - smooth(0.55, 1, p)) * 0.9 * k;   // fades in, then out
+        pond(r, fade);
+        pond(r - PITCH, fade * 0.6);
+        pond(r - PITCH * 3, fade * 0.28);
+      }
+      // ---- globe ----
+      const lon0 = LON0 + SWAY * Math.sin(sec * TAU / SWAY_T);
+      const turn = -lon0 / 360 * LAND_W, c = g.cells;
+      for (let i = 0; i < c.length; i += 8) {
+        let mc = Math.floor(c[i + 3] - turn) % LAND_W; if (mc < 0) mc += LAND_W;
+        const land = LAND[c[i + 2] + mc];
+        const s = c[i + 4], rim = c[i + 5], j = c[i + 6];
+        let a;
+        if (land) a = (0.39 + 0.31 * j) * s + rim * 0.26;            // countries 30% brighter than before
+        else a = (0.06 + 0.04 * j) * s + rim * 0.16;          // sea stays faint so the countries read as shapes
+        a *= k * c[i + 7];                                           // whole dot fades, base and rim included
+        if (a < 0.015) continue;
+        ctx.fillStyle = land && s > 0.85 && j > 0.82 ? `rgba(${hi},${Math.min(1, a).toFixed(3)})` : `rgba(${rgb},${Math.min(1, a).toFixed(3)})`;
+        ctx.fillRect(c[i], c[i + 1], PX, PX);
+      }
     }
 
     fields.forEach(f => { f.colours(); f.size(); f.draw(still ? 2 : 0); });

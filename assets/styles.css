@@ -290,18 +290,22 @@ button.chip[aria-pressed="true"]:hover { color: var(--link); border-color: var(-
    the layout switches in one frame, the pill (a header pseudo-element) eases its left/right edges,
    and main.js glides the logo, links and CTAs from their old spots with transforms (FLIP). */
 @media (min-width: 1024px) {
-  .site-header { --sq-gap: 40px; --sq-pl: 32px; --sq-pr: 20px; transition: background-color var(--dur-lock) var(--ease-out), border-color var(--dur-lock) var(--ease-out); }
+  .site-header { --sq-gap: 40px; --sq-pl: 32px; --sq-pr: 20px; --sq-logo: 37px; transition: background-color var(--dur-lock) var(--ease-out), border-color var(--dur-lock) var(--ease-out); }
   .site-header::before { content: ""; position: absolute; top: 2px; bottom: 2px; left: 0; right: 0; z-index: -1; border-radius: 999px; border: 1px solid var(--line-strong); background: color-mix(in srgb, var(--canvas) 84%, transparent); -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); box-shadow: 0 10px 30px -12px rgb(0 0 0 / .55); opacity: 0; pointer-events: none; transition: left var(--dur-lock) var(--ease-out), right var(--dur-lock) var(--ease-out), opacity var(--dur-lock) var(--ease-out); }
   .site-header.is-squeezed { background: transparent; border-bottom-color: transparent; }
   .site-header.is-squeezed::before { left: var(--pill-l, 0px); right: var(--pill-r, 0px); opacity: 1; }
   .site-header.is-squeezed .nav { max-width: var(--nav-fit, 780px); gap: var(--sq-gap); padding: 0 var(--sq-pr) 0 var(--sq-pl); }
   .site-header.is-squeezed .nav-slot { display: none; }
+  /* in the pill only the NextGen mark shows: the slot shrinks to the mark and the wordmark wipes away */
+  .site-header .logo img { flex: none; clip-path: inset(0 0 0 0); transition: clip-path var(--dur-lock) var(--ease-out); }
+  .site-header.is-squeezed .logo { width: var(--sq-logo); }
+  .site-header.is-squeezed .logo img { clip-path: inset(0 calc(100% - var(--sq-logo)) 0 0); }
   .site-header .nav-slot { animation: nav-slot-in var(--dur-lock) var(--ease-out); }
 }
 @keyframes nav-slot-in { from { opacity: 0; } }
 }
 @media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
-  .site-header, .site-header::before { transition: none; }
+  .site-header, .site-header::before, .site-header .logo img { transition: none; }
   .site-header .nav-slot { animation: none; }
 }
 .burger { display: none; width: 40px; height: 40px; border-radius: var(--radius-sm); place-items: center; align-content: center; border: 1px solid var(--line-strong); background: var(--surface); box-shadow: var(--depth-raised); }
@@ -1083,6 +1087,22 @@ html:not(.has-gsap) .marquee.is-running:hover .marquee-row, .marquee.is-running:
   -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent); mask-image: linear-gradient(180deg, #000 70%, transparent); }
 /* keep the headline column readable over the beams */
 .hero .wrap > h1, .hero .wrap > .lead { text-shadow: 0 0 24px var(--canvas); }
+.hero .form-meta, .hero .proof-row { text-shadow: 0 0 10px var(--canvas), 0 0 18px var(--canvas); }
+/* Homepage hero with the globe: copy sits tight at the top, the globe hangs as a bowl between the form and
+   the numbers (the numbers' top margin is the room it gets), then the client logos, then the story stage.
+   main.js mirrors --globe-r: change both together. */
+.hero:has(> .fx-hero[data-fx="globe"]) { --globe-r: clamp(160px, 21vw, 340px); padding-top: 72px; }
+.hero:has(> .fx-hero[data-fx="globe"]) h1 { margin-top: var(--space-5); font-size: 56px; line-height: 62px; letter-spacing: -0.04em; }
+.hero:has(> .fx-hero[data-fx="globe"]) .lead { margin-top: 20px; max-width: 800px; }
+.hero:has(> .fx-hero[data-fx="globe"]) .capture { margin-top: var(--space-6); }
+.hero:has(> .fx-hero[data-fx="globe"]) .proof-row { margin-top: calc(var(--globe-r) * 1.1); }
+.hero-logos { margin-top: 28px; text-align: left; }
+.hero:has(> .fx-hero[data-fx="globe"]) .stage-wrap { margin-top: var(--space-9); }
+@media (max-width: 767px) {
+  .hero:has(> .fx-hero[data-fx="globe"]) { padding-top: var(--space-7); }
+  .hero:has(> .fx-hero[data-fx="globe"]) h1 { font-size: 40px; line-height: 44px; }
+  .hero-logos { margin-top: var(--space-6); }
+}
 
 /* gradient word in the hero headline */
 .grad-text {
